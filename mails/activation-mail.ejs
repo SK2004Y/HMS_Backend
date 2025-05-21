@@ -1,0 +1,328 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Activation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            background-color: #ffffff;
+            width: 100%;
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 20px;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .content {
+            padding: 20px;
+            color: #333333;
+        }
+        .content p {
+            font-size: 16px;
+            line-height: 1.6;
+        }
+        .activation-code {
+            font-size: 20px;
+            font-weight: bold;
+            color: #4CAF50;
+            margin: 20px 0;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .footer {
+            margin-top: 30px;
+            font-size: 12px;
+            color: #999999;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Activate Your Account</h1>
+        </div>
+        <div class="content">
+            <p>Hello <%= user.name %>,</p>
+            <p>Thank you for registering with Freelancer. Please use the activation code below to verify your email address:</p>
+            <div class="activation-code">
+                <%= activationCode %>
+            </div>
+            <p>Or click the button below to activate your account:</p>
+           
+            <p>If you did not connect with Freelancer, please ignore this email.</p>
+        </div>
+        <div class="footer">
+            <p>&copy; <%= new Date().getFullYear() %> Your Company. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html> -->
+
+
+
+
+
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elearning Activation Email </title>
+    <style type="text/css">
+
+        body{
+            margin: 0px;
+            padding: 0px;
+            min-width: 100%;
+            font-family: Arial,sans-serif;
+            font-size: 16px;
+            line-height: 1.5;
+            background-color: #FAFAFA;
+            color: #222222;
+        }
+        a{
+            color: #000;
+            text-decoration: none;
+        }
+        h1{
+            font-size: 24px;
+            font-weight: 700;
+            line-height: 1.25;
+            margin-top: 0;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        p{
+            margin-top: 0;
+            margin-bottom: 24px;
+        }
+
+        table td{
+            vertical-align: top;
+        }
+        
+
+        /*layout*/
+        .email-wrapper{
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .email-header{
+            background-color: #0070f3;
+            padding: 24px;
+            color: #ffffff;
+        }
+
+
+        .email-body{
+            padding: 24px;
+            background-color: #ffffff;
+        }
+
+        .email-footer{
+            background-color: #f6f6f6;
+            padding: 24px;
+        }
+
+        /* Buttons */
+        .button{
+            display: inline-block;
+            background-color: #0070f3;
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: 700;
+            text-align: center;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+        }
+
+
+    </style>
+</head>
+<body>
+
+    <div class="email-wrapper">
+        <div class="email-header">
+            <h1>Welcome to Elearning  </h1>
+        </div>
+
+        <div class="email-body">
+            <p>Hello <%=user.name %>,</p>
+            <p>Thank you for registering with Elearning. to activate your account ,please use the following activation code : </p>
+
+            <h2><%=activationCode %></h2>
+
+            <a href="https://www.hackerearth.com/practice/">Go to and Activate</a>
+            <p>Please enter this code on the activation page within the next 5 minutes.</p>
+           
+        </div>
+        <div class="email-footer">
+            <p>If you have any questions, please don't hesitate to contact us at <a href="https://whatsapp.com/channel/0029VaApWC5C1FuClqFw2c3E">Support@Elearning</a></p>
+        </div>
+    </div>
+    
+</body>
+</html> -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Activate Your Account</title>
+    <style>
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f6f9fc;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 30px auto;
+            background: #fff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        .header {
+            background-color: #2d89ef;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .content p {
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        .activation-code {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2d89ef;
+            margin: 20px 0;
+        }
+
+        .btn {
+            display: inline-block;
+            background-color: #2d89ef;
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+
+        .footer {
+            padding: 20px;
+            font-size: 12px;
+            color: #888;
+            background-color: #f1f1f1;
+            text-align: center;
+        }
+
+        @media (max-width: 600px) {
+            .content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Welcome to DHMS</h1>
+        </div>
+        <div class="content">
+            <p>Dear <strong>
+                    <%= user.name %>
+                </strong>,</p>
+
+            <p>Thank you for registering with <strong>Dentist Hospital Management System</strong>.</p>
+            <p>Please use the activation code below to complete your account setup:</p>
+
+            <div class="activation-code">
+                <%= activationCode %>
+            </div>
+
+            <p>Or you can click the button below to activate your account instantly:</p>
+
+          
+
+            <p>If you didn’t request this, you can safely ignore this email.</p>
+        </div>
+        <div class="footer">
+            &copy; <%= new Date().getFullYear() %> DHMS | All rights reserved.
+        </div>
+    </div>
+</body>
+
+</html>

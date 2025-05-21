@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Appointment Notification</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9fafc;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 30px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .header {
+            background-color: #0d6efd;
+            padding: 20px;
+            color: #ffffff;
+            text-align: center;
+        }
+
+        .content {
+            padding: 30px;
+            text-align: left;
+            color: #333;
+        }
+
+        .content h2 {
+            color: #0d6efd;
+        }
+
+        .status {
+            font-size: 18px;
+            font-weight: bold;
+            color: #198754;
+            /* green for success */
+        }
+
+        .status.failed {
+            color: #dc3545;
+            /* red for failure */
+        }
+
+        .footer {
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #999999;
+            background-color: #f1f1f1;
+        }
+
+        .btn {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #0d6efd;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Dentist Appointment Update</h1>
+        </div>
+        <div class="content">
+            <p>Hello <strong>
+                    <%= patientName %>
+                </strong>,</p>
+
+            <p>Your appointment request with <strong>
+                    <%= doctorName %>
+                </strong> on
+                <strong>
+                    <%= appointmentDate %>
+                </strong> at
+                <strong>
+                    <%= time %>
+                </strong> has been:
+            </p>
+
+            <p class="status <%= isConfirmed ? '' : 'failed' %>">
+                <%= isConfirmed ? 'CONFIRMED ✅' : 'REJECTED ❌' %>
+            </p>
+
+            <% if (!isConfirmed) { %>
+                <p><strong>Reason:</strong>
+                    <%= rejectionReason || "Not specified" %>
+                </p>
+                <% } else { %>
+                    <p>Please make sure to arrive 10 minutes early. You can view details and manage your appointment
+                        below.</p>
+                    <a href="<%= appointmentLink %>" class="btn">View Appointment</a>
+                    <% } %>
+
+                        <p>Thank you for choosing our clinic!</p>
+        </div>
+        <div class="footer">
+            &copy; <%= new Date().getFullYear() %> Dentist Hospital Management System. All rights reserved.
+        </div>
+    </div>
+</body>
+
+</html>
