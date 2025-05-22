@@ -314,7 +314,6 @@ interface ILoginRequest {
 export const loginUser = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      console.log(`login api hit `,req.body)
       const { email, password } = req.body as ILoginRequest;
 
       if (!email || !password) {
@@ -324,22 +323,14 @@ export const loginUser = CatchAsyncError(
       const user = await userModel.findOne({ email }).select("+password");
 
       if (!user) {
-        return next(new ErrorHandler("Invalid email or password", 400));
+        return next(new ErrorHandler("Invalid email and password", 400));
       }
 
       const isPasswordMatch = await user.comparePassword(password);
 
       if (!isPasswordMatch) {
-        return next(new ErrorHandler("Password doesn't match", 400));
+        return next(new ErrorHandler("password doesn't match", 400));
       }
-
-
-   
-
-     
-
-
-      // Now after model exists (doctor/patient), finally login
 
       sendToken(user, 200, res);
     } catch (error: any) {
@@ -355,7 +346,7 @@ export const logoutUser = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       // Check if user is authenticated
-     
+     console.log(`logout api hit `);
       // Clear cookies
       res.clearCookie("access_token");
       res.clearCookie("refresh_token");
@@ -432,10 +423,11 @@ export const updateAccessToken = CatchAsyncError(
 
       await redis.set(user._id, JSON.stringify(user), "EX", 604800); //7 days for 604800
 
-      res.status(200).json({
-        status: "success",
-        accessToken,
-      });
+      // res.status(200).json({
+      //   status: "success",
+      //   accessToken,
+      // });
+      next();
     } catch (error: any) {
       return next(new ErrorHandler(error.message, 400));
     }

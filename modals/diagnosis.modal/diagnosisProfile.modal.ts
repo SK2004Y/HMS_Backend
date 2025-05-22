@@ -3,7 +3,7 @@ import mongoose,{Schema,Document,Types} from "mongoose";
 
 //interface 
 export interface IProfile{
-  userId: mongoose.Types.ObjectId;
+    userId: mongoose.Types.ObjectId;
     specialization:string[];
     registrationNumber:string;
     experience:number;

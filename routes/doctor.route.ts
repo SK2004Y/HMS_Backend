@@ -20,9 +20,17 @@ import { parseFormData } from '../middleware/formPaser';
 import { updateMedicineShop } from '../controllers/medicineShop.controller';
 import { createAppointment } from '../controllers/chats/appointment.controller';
 import { upload } from '../utils/multer'; // or configure for Cloudinary
+import { updateAccessToken } from '../controllers/user.controller';
+import { handleProfile } from '../utils/handler/handler.controller';
 
+
+//all profileform handler 
+doctorRoute.get("/check-profile",updateAccessToken,isAuthneticated,handleProfile);
 doctorRoute.post(
   "/d-create-profile",
+  updateAccessToken,
+  isAuthneticated,
+  authorizeRoles("doctor"),
   upload.single("avatar"),
   // 👈 middleware to parse stringified JSON
   createDoctorProfile

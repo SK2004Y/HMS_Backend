@@ -7,31 +7,101 @@ import cloudinary, { streamUploadToCloudinary } from "../utils/cloudinary";
 import { messagess } from "./reports/doctor-report.controller";
 
 // Create doctor profile
+// export const createDoctorProfile = CatchAsyncError(
+//   async (req: Request, res: Response, next: NextFunction) => {
+//     try {
+//       console.log(`api hit create`);
+//       console.log("Request Body: ", req.body);
+//       console.log("File: ", req.file);
+
+//       let avatarData = {
+//         secure_url: "",
+//         public_id: "",
+//       };
+
+
+//       // Step 1: Upload avatar to Cloudinary if a file is present
+//       if (req.file) {
+//         console.log(`file get form frontend`,req.file);
+//         avatarData = await streamUploadToCloudinary(req.file, "doctor-avatars");
+//         console.log("Uploaded to Cloudinary:", avatarData);
+//       }
+
+
+//       const parsedBody = {
+//         ...req.body,
+//         location: JSON.parse(req.body.location),
+//         accountDetails: JSON.parse(JSON.stringify(req.body.accountDetails)), // this step ensures it's a clean object
+//       };
+//       // Step 2: Create new doctor profile with avatar info (if available)
+//       const doctor = new DoctorProfile({
+//         ...parsedBody,
+//         avatar: {
+//           url: avatarData.secure_url,
+//           public_id: avatarData.public_id,
+//         },
+//       });
+
+//       // Step 3: Save doctor profile to MongoDB
+//       await doctor.save();
+
+//       // Step 4: Respond with success and created profile
+//       res.status(201).json({ success: true, doctor ,messages:"profile Created succesfully"});
+//     } catch (error: any) {
+//       return next(new ErrorHandler(error.message, 400));
+//     }
+//   }
+// );
+
+
+
 export const createDoctorProfile = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      console.log("Request Body: ", req.body);
-      console.log("File: ", req.file);
+      console.log("API hit: createDoctorProfile");
+      console.log("Request Body:", req.body);
+      console.log("File:", req.file);
 
       let avatarData = {
         secure_url: "",
         public_id: "",
       };
 
-      // Step 1: Upload avatar to Cloudinary if a file is present
       if (req.file) {
-        console.log(`file get form frontend`,req.file);
         avatarData = await streamUploadToCloudinary(req.file, "doctor-avatars");
-        console.log("Uploaded to Cloudinary:", avatarData);
+      }
+      let location = {};
+      let accountDetails = {};
+
+      try {
+        location = JSON.parse(req.body.location);
+      } catch (err) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Invalid location data" });
       }
 
-
+      try {
+        accountDetails = JSON.parse(req.body.accountDetails);
+      } catch (err) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Invalid account details data" });
+      }
+      
       const parsedBody = {
         ...req.body,
-        location: JSON.parse(req.body.location),
-        accountDetails: JSON.parse(JSON.stringify(req.body.accountDetails)), // this step ensures it's a clean object
+        location,
+        accountDetails,
       };
-      // Step 2: Create new doctor profile with avatar info (if available)
+      const existingProfile = await DoctorProfile.findOne({
+        userId: req.body.userId,
+      });
+      if (existingProfile) {
+        return res
+          .status(400)
+          .json({ message: "Profile already exists for this user." });
+      }
       const doctor = new DoctorProfile({
         ...parsedBody,
         avatar: {
@@ -40,11 +110,13 @@ export const createDoctorProfile = CatchAsyncError(
         },
       });
 
-      // Step 3: Save doctor profile to MongoDB
       await doctor.save();
 
-      // Step 4: Respond with success and created profile
-      res.status(201).json({ success: true, doctor ,messages:"profile Created succesfully"});
+      res.status(201).json({
+        success: true,
+        doctor,
+        message: "Profile created successfully",
+      });
     } catch (error: any) {
       return next(new ErrorHandler(error.message, 400));
     }

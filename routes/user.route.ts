@@ -38,7 +38,7 @@ const userRouter = express.Router();
 userRouter.post("/registration", registrationUser);
 userRouter.post("/activate-user", activationUser);
 userRouter.post("/login", loginUser);
-userRouter.get("/logout", isAuthneticated, logoutUser); // Use isAuthenticated middleware before logoutUser  authorizeRoles('admin')
+userRouter.get("/logout",updateAccessToken, isAuthneticated, logoutUser); // Use isAuthenticated middleware before logoutUser  authorizeRoles('admin')
 
 userRouter.get("/refresh", updateAccessToken);
 
