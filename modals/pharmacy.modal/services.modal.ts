@@ -2,7 +2,7 @@ import mongoose,{Document,Schema,Types} from "mongoose";
 
 //services interface
 
-export interface IRadiologyServices{
+export interface IPharmacyServices{
     userId:mongoose.Types.ObjectId
     name:string;
     price:number;
@@ -57,7 +57,7 @@ export const socialLinkSchema = new Schema<ISocialLink>(
 );
 
 
-const radiologyServiceSchema=new Schema<IRadiologyServices>({
+const pharmacyServiceSchema=new Schema<IPharmacyServices>({
 userId:{
     type:Schema.Types.ObjectId,
     ref:"User",
@@ -96,6 +96,6 @@ socialLink:socialLinkSchema
 },{timestamps:true});
 
 
-export const RadiologyService =mongoose.model<IRadiologyServices>("RadiologyService",radiologyServiceSchema);
+export const PharmacyService =mongoose.model<IPharmacyServices>("PharmacyService",pharmacyServiceSchema);
 
 
