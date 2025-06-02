@@ -62,10 +62,13 @@ const userSchema: Schema<IUser> = new mongoose.Schema(
       default: "patient",
       enum: [
         "doctor",
+        "gym",
         "diagnostic",
         "hospital",
         "medicine",
         "resort",
+        "radiology",
+        "ambulance",
         "admin",
       ],
     },

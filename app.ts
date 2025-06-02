@@ -24,6 +24,13 @@ import  medicineRouter from './routes/medicine.route';
 import clinicRouter from './routes/clinic.route';
 import diaRouter from './routes/diagnostic.route';
 import resortRouter from './routes/resort.route';
+import GymRoute from './routes/gym/gym.route';
+import diagnosisRouter from './routes/diagnosis/diagnosis.route';
+import HospitalRoute from './routes/hospital/hospital.route';
+import MedicineRoute from './routes/medicine/medicine.route';
+import AmbulanceRoute from './routes/ambulance/ambulance.route';
+import RadiologyRoute from './routes/radiology/radiology.router';
+import ResortRoute from './routes/resort/resort.route';
 
 // import { reportRouter } from './routes/patient-report.router';
 
@@ -81,7 +88,15 @@ app.use("/api/vs",notificationRoute);
 app.use("/api/vs/medicine",medicineRouter);
 app.use("/api/vs/clinic",clinicRouter);
 app.use("/api/vs/diagnostic",diaRouter)
-app.use("/api/vs/resort",resortRouter)
+app.use("/api/vs/resorts",resortRouter)
+app.use("/api/vs/gym",GymRoute);
+app.use("/api/vs/diagnosis",diagnosisRouter)
+app.use("/api/vs/hospital",HospitalRoute);
+app.use("/api/vs/medicine",MedicineRoute);
+app.use("/api/vs/ambulance",AmbulanceRoute);
+app.use("/api/vs/radiology",RadiologyRoute);
+app.use("/api/vs/resort",ResortRoute);
+
 
 //testing route
 app.get("/test",(req: Request ,res: Response ,next: NextFunction)=>{
