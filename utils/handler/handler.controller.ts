@@ -25,10 +25,13 @@ export const handleProfile = CatchAsyncError(
 
         switch (role) {
           case "doctor":
+            console.log(`idis before `);
             profileExists =
-              (await DoctorProfile.findOne({ userId: userIds })) !== null;
+            (await DoctorProfile.findOne({ userId: userIds })) !== null;
+              console.log(`idis after `);
             break;
           case "gym":
+            console.log(`idis gym `);
             profileExists =
               (await GymProfile.findOne({ userId: userIds })) !== null;
             break;

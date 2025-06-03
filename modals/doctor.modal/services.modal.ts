@@ -2,26 +2,28 @@ import mongoose,{Document,Schema,Types} from "mongoose";
 
 //services interface
 
-export interface IDoctorServices{
-    userId:mongoose.Types.ObjectId
-    name:string;
-    price:number;
-    discount?:number;
-    picture?:{
-        url:string;
-        public_id:string;
-    };
-    mode:string;
-    description:string;
-    reviews?:IReview;
-    socialLink?:[ISocialLink]
+export interface IDoctorServices {
+  userId: mongoose.Types.ObjectId;
+  serviceName: string;
+  fee: number;
+  estimatedPrice?: number;
+  image?: {
+    url: string;
+    public_id: string;
+  };
+  mode: string;
+  availability: string;
+  duration?: string;
+  description: string;
+  reviews?: IReview;
+  socialLink?: [ISocialLink];
 }
 
 //review interface
 export interface IReview {
   userId: mongoose.Types.ObjectId;
-  userType: "Patient" | "Doctor";
-  rating: number;
+  userType?: "Patient" | "Doctor";
+  rating?: number;
   comment?: string;
   createdAt?: Date;
 }
@@ -57,43 +59,48 @@ export const socialLinkSchema = new Schema<ISocialLink>(
 );
 
 
-const doctorServiceSchema=new Schema<IDoctorServices>({
-userId:{
-    type:Schema.Types.ObjectId,
-    ref:"User",
-    required:true
-},
-name:{
-    type:String,
-    required:[true,"please enter a service name"]
-},
-price:{
-    type:Number,
-    required:[true,"please enter a service price "]
-},
-discount:{
-    type:Number
-},
-picture:{
-    url:{
-        type:String,
+const doctorServiceSchema = new Schema<IDoctorServices>(
+  {
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
     },
-    public_id:{
-        type:String,
-
-    }
-},
-mode:{
-    type:String,
-    enum:["Online","Offline","Hybrid","InHome","e-Clinic"]
-},
-description:{
-    type:String,
-    required:[true,"Please enter a something about servics"]
-},
-reviews:ReviewSchema,
-socialLink:socialLinkSchema
-},{timestamps:true});
+    serviceName: {
+      type: String,
+      required: [true, "please enter a service name"],
+    },
+    fee: {
+      type: Number,
+      required: [true, "please enter a service price "],
+    },
+    estimatedPrice: {
+      type: Number,
+    },
+    image: {
+      url: {
+        type: String,
+      },
+      public_id: {
+        type: String,
+      },
+    },
+    mode: {
+      type: String,
+    //   enum: ["Online", "Offline", "Hybrid", "InHome", "e-Clinic"],
+    },
+    duration: {
+      type: String,
+    },
+    description: {
+      type: String,
+      required: [true, "Please enter a something about servics"],
+    },
+    reviews: ReviewSchema,
+    socialLink: socialLinkSchema,
+  },
+  { timestamps: true }
+);
 
 
 export const DoctorService =mongoose.model<IDoctorServices>("DoctorService",doctorServiceSchema);

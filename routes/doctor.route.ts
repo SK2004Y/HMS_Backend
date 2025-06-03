@@ -22,6 +22,7 @@ import { createAppointment } from '../controllers/chats/appointment.controller';
 import { upload } from '../utils/multer'; // or configure for Cloudinary
 import { updateAccessToken } from '../controllers/user.controller';
 import { handleProfile } from '../utils/handler/handler.controller';
+import { createDoctorService } from '../controllers/doctor/services.controller';
 
 
 //all profileform handler 
@@ -35,6 +36,19 @@ doctorRoute.post(
   // 👈 middleware to parse stringified JSON
   createDoctorProfile
 );
+
+
+
+//created services
+doctorRoute.post(
+  "/create-service",
+  updateAccessToken,
+  isAuthneticated,
+  authorizeRoles("doctor"),
+  upload.single("image"),
+  createDoctorService
+);
+
 
 doctorRoute.get("/Alldoctors", allDoctorProfile)
 doctorRoute.get("/single/:id",singleDoctorProfile)
