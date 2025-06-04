@@ -1,55 +1,10 @@
-import express, { NextFunction, Request, Response } from "express";
+import express, {NextFunction,Request,Response} from "express"
 import { CatchAsyncError } from "../../middleware/catchAsyncErrors";
-import { DiagnosticProfile } from "../../modals/diagnosis.modal/diagnosisProfile.modal";
 import { streamUploadToCloudinary } from "../../utils/cloudinary";
-
-import ErrorHandler from "../../utils/ErrorHandler";
 import { DoctorService } from "../../modals/doctor.modal/services.modal";
-// export const createDoctorService = CatchAsyncError(
-//   async (req: Request, res: Response, next: NextFunction) => {
-//     try {
-//       console.log("API hit: CreatedServices");
-//       console.log("Request Body:", req.body);
-//       console.log("File:", req.file);
-//       let avatarData = {
-//         secure_url: "",
-//         public_id: "",
-//       };
+import { DiagnosticModel } from "../../modals/diagnostic.model";
+import ErrorHandler from "../../utils/ErrorHandler";
 
-//       if (req.file) {
-//         avatarData = await streamUploadToCloudinary(req.file, "doctor-service");
-//       }
-
-//       const parsedBody = {
-//         ...req.body,
-//       };
-
-//       const doctor = new DoctorService({
-//         ...parsedBody,
-//         avatar: {
-//           url: avatarData.secure_url,
-//           public_id: avatarData.public_id,
-//         },
-//       });
-
-//       await doctor.save();
-
-//       res.status(201).json({
-//         success: true,
-//         doctor,
-//         message: "Services Created  successfully",
-//       });
-//     } catch (error: any) {
-//       return next(new ErrorHandler(error.message, 400));
-//     }
-//   }
-// );
-
-
-
-
-
-// CREATE
 export const createDoctorService = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -66,7 +21,7 @@ export const createDoctorService = CatchAsyncError(
         ...req.body,
       };
 
-      const doctor = new DoctorService({
+      const doctor = new DiagnosticModel({
         ...parsedBody,
         avatar: {
           url: avatarData.secure_url,
@@ -87,36 +42,13 @@ export const createDoctorService = CatchAsyncError(
   }
 );
 
-export const getAllDoctorServices = async (req: Request, res: Response) => {
-  const page = parseInt(req.query.page as string) || 1;
-  const limit = parseInt(req.query.limit as string) || 3; // Make it configurable (3 for demo)
-  const skip = (page - 1) * limit;
-
-  try {
-    console.log(
-      "Fetching services | Page:",
-      page,
-      "| Limit:",
-      limit,
-      "| Skip:",
-      skip
-    );
-
-    const services = await DoctorService.find().skip(skip).limit(limit);
-    const total = await DoctorService.countDocuments();
-
-    res.status(200).json({
-      services,
-      total,
-      page,
-      totalPages: Math.ceil(total / limit),
-    });
-  } catch (error) {
-    console.error("Error in getAllDoctorServices:", error);
-    res.status(500).json({ message: "Failed to fetch services", error });
+// READ ALL
+export const getAllDoctorServices = CatchAsyncError(
+  async (req: Request, res: Response) => {
+    const services = await DoctorService.find().sort({ createdAt: -1 });
+    res.status(200).json({ success: true, services });
   }
-};
-
+);
 
 // READ SINGLE
 export const getSingleDoctorService = CatchAsyncError(

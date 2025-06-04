@@ -22,7 +22,7 @@ import { createAppointment } from '../controllers/chats/appointment.controller';
 import { upload } from '../utils/multer'; // or configure for Cloudinary
 import { updateAccessToken } from '../controllers/user.controller';
 import { handleProfile } from '../utils/handler/handler.controller';
-import { createDoctorService } from '../controllers/doctor/services.controller';
+import { createDoctorService, deleteDoctorService, getAllDoctorServices, getDoctorServiceStats, getSingleDoctorService, updateDoctorService } from '../controllers/doctor/services.controller';
 
 
 //all profileform handler 
@@ -44,10 +44,24 @@ doctorRoute.post(
   "/create-service",
   updateAccessToken,
   isAuthneticated,
-  authorizeRoles("doctor"),
+  authorizeRoles("hospital"),
   upload.single("image"),
   createDoctorService
 );
+
+doctorRoute.post("/create", upload.single("image"), createDoctorService);
+doctorRoute.get("/allDoctorService/page",  updateAccessToken,
+  isAuthneticated,
+  authorizeRoles("doctor"),getAllDoctorServices);
+doctorRoute.get("/:id", getSingleDoctorService);
+doctorRoute.put("/update/:id", upload.single("image"), updateDoctorService);
+doctorRoute.delete("/delete/:id", deleteDoctorService);
+
+// Admin
+doctorRoute.get("/admin/stats", getDoctorServiceStats);
+
+
+
 
 
 doctorRoute.get("/Alldoctors", allDoctorProfile)
