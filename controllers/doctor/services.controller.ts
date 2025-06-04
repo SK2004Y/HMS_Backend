@@ -1,7 +1,7 @@
 import express, { NextFunction, Request, Response } from "express";
 import { CatchAsyncError } from "../../middleware/catchAsyncErrors";
 import { DiagnosticProfile } from "../../modals/diagnosis.modal/diagnosisProfile.modal";
-import { streamUploadToCloudinary } from "../../utils/cloudinary";
+import cloudinary, { streamUploadToCloudinary } from "../../utils/cloudinary";
 
 import ErrorHandler from "../../utils/ErrorHandler";
 import { DoctorService } from "../../modals/doctor.modal/services.modal";
@@ -87,7 +87,7 @@ export const createDoctorService = CatchAsyncError(
   }
 );
 
-export const getAllDoctorServices = async (req: Request, res: Response) => {
+export const getAllDoctorServices = CatchAsyncError(async (req: Request, res: Response) => {
   const page = parseInt(req.query.page as string) || 1;
   const limit = parseInt(req.query.limit as string) || 3; // Make it configurable (3 for demo)
   const skip = (page - 1) * limit;
@@ -115,13 +115,17 @@ export const getAllDoctorServices = async (req: Request, res: Response) => {
     console.error("Error in getAllDoctorServices:", error);
     res.status(500).json({ message: "Failed to fetch services", error });
   }
-};
+
+});
 
 
 // READ SINGLE
 export const getSingleDoctorService = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
-    const service = await DoctorService.findById(req.params.id);
+   
+    const id=req.params.id;
+    console.log(`id is receive${id}`,id);
+    const service = await DoctorService.findById(id);
     if (!service) {
       return next(new ErrorHandler("Service not found", 404));
     }
@@ -132,23 +136,30 @@ export const getSingleDoctorService = CatchAsyncError(
 // UPDATE
 export const updateDoctorService = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
-    let service = await DoctorService.findById(req.params.id);
+    const id = req.params.id;
+
+    let service = await DoctorService.findById(id);
     if (!service) {
       return next(new ErrorHandler("Service not found", 404));
     }
 
+    // ✅ If new image is being uploaded
     if (req.file) {
-      const avatarData = await streamUploadToCloudinary(
-        req.file,
-        "doctor-service"
-      );
+      // ✅ Delete previous image from Cloudinary
+      if (service.image && service.image.public_id) {
+        await cloudinary.uploader.destroy(service.image.public_id);
+      }
+
+      // ✅ Upload new image
+      const avatarData = await streamUploadToCloudinary(req.file, "doctor-service");
       req.body.avatar = {
         url: avatarData.secure_url,
         public_id: avatarData.public_id,
       };
     }
 
-    service = await DoctorService.findByIdAndUpdate(req.params.id, req.body, {
+    // ✅ Update the service
+    service = await DoctorService.findByIdAndUpdate(id, req.body, {
       new: true,
       runValidators: true,
     });
