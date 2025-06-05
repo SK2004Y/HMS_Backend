@@ -87,9 +87,9 @@ export const createDoctorService = CatchAsyncError(
   }
 );
 
-export const getAllDoctorServices = CatchAsyncError(async (req: Request, res: Response) => {
+export const getAllDoctorServicess = CatchAsyncError(async (req: Request, res: Response) => {
   const page = parseInt(req.query.page as string) || 1;
-  const limit = parseInt(req.query.limit as string) || 3; // Make it configurable (3 for demo)
+  const limit = parseInt(req.query.limit as string) || 5; // Make it configurable (3 for demo)
   const skip = (page - 1) * limit;
 
   try {
@@ -117,6 +117,70 @@ export const getAllDoctorServices = CatchAsyncError(async (req: Request, res: Re
   }
 
 });
+
+
+//2nd 
+export const getAllDoctorServices = CatchAsyncError(
+  async (req: Request, res: Response) => {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 5;
+    const skip = (page - 1) * limit;
+
+    // Query params
+    const search = (req.query.search as string)?.trim();
+    const sortBy = (req.query.sortBy as string) || "createdAt"; // e.g., 'createdAt', 'professional'
+    const order = (req.query.order as string) === "asc" ? 1 : -1;
+    const filterByDate = req.query.filterByDate as string; // e.g., "lastMonth"
+
+    const filter: any = {};
+
+    // Search by serviceName (case-insensitive)
+    if (search) {
+      filter.serviceName = { $regex: search, $options: "i" };
+    }
+
+    // Optional filter for "last month"
+    if (filterByDate === "lastMonth") {
+      const oneMonthAgo = new Date();
+      oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+      filter.createdAt = { $gte: oneMonthAgo };
+    }
+
+    try {
+      console.log("Fetching services with:", {
+        page,
+        limit,
+        skip,
+        search,
+        sortBy,
+        order,
+        filterByDate,
+        filter,
+      });
+
+      const services = await DoctorService.find(filter)
+        .sort({ [sortBy]: order })
+        .skip(skip)
+        .limit(limit);
+
+      const total = await DoctorService.countDocuments(filter);
+
+      res.status(200).json({
+        services,
+        total,
+        page,
+        totalPages: Math.ceil(total / limit),
+      });
+    } catch (error) {
+      console.error("Error in getAllDoctorServices:", error);
+      res.status(500).json({ message: "Failed to fetch services", error });
+    }
+  }
+);
+
+
+
+
 
 
 // READ SINGLE
@@ -206,3 +270,40 @@ export const getDoctorServiceStats = CatchAsyncError(
     });
   }
 );
+
+
+
+
+
+// PATCH /api/services/:id/toggle
+export const toggleDoctorServiceField = CatchAsyncError(
+  async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { field, value } = req.body;
+    console.log(`fiedls are `,field,value)
+
+    if (!["isAvailable", "lead"].includes(field)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid toggle field." });
+    }
+
+    const service = await DoctorService.findById(id);
+    if (!service) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Service not found." });
+    }
+
+    (service as any)[field] = value; // dynamically update field
+    await service.save();
+
+    res.status(200).json({
+      success: true,
+      message: `${field} updated successfully.`,
+      service,
+    });
+  }
+);
+
+

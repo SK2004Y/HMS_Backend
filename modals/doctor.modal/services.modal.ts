@@ -12,7 +12,8 @@ export interface IDoctorServices {
     public_id: string;
   };
   mode: string;
-  availability: string;
+  isAvailable: boolean;
+  lead:boolean,
   duration?: string;
   description: string;
   reviews?: IReview;
@@ -88,6 +89,14 @@ const doctorServiceSchema = new Schema<IDoctorServices>(
     mode: {
       type: String,
     //   enum: ["Online", "Offline", "Hybrid", "InHome", "e-Clinic"],
+    },
+    isAvailable:{
+      type:Boolean,
+      default:true,
+    },
+    lead:{
+      type:Boolean,
+      default:false
     },
     duration: {
       type: String,
