@@ -29,7 +29,9 @@ import { createAppointment } from "../../controllers/chats/appointment.controlle
 import { upload } from "../../utils/multer"; // or configure for Cloudinary
 import { updateAccessToken } from "../../controllers/user.controller";
 import { handleProfile } from "../../utils/handler/handler.controller";
+  
 
+//check the diagnostic update
 //all profileform handler
 diagnosisRouter.get(
   "/check-profile",
