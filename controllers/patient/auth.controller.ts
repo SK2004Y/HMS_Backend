@@ -4,6 +4,7 @@ import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import userModel, { IUser } from "../../modals/user_model";
 import twilio from "twilio";
+import { redis } from "../../utils/redis";
 // import twilioClient from "../config/twilioClient"; // Your Twilio client setup
 const twilioClient = twilio(
   process.env.TWILIO_SID,
@@ -21,151 +22,93 @@ const generateToken = (userId: string) => {
   });
 };
 
-// -----------------------------
-// ✅ 1. Send OTP to patient phone
-// -----------------------------
+//twilio
 export const sendOTP = async (req: Request, res: Response) => {
   const { phone, name } = req.body;
-
   if (!phone || !name) {
     return res.status(400).json({ message: "Phone and name are required" });
   }
 
-  // Generate 6-digit numeric OTP
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
-  console.log(`otp is `,otp);
-  // Hash the OTP before storing in DB
-  const hashedOtp = crypto.createHash("sha256").update(otp).digest("hex");
-
-  // Set OTP expiry (5 minutes)
-  const otpExpire = new Date(Date.now() + 5 * 60 * 1000);
-
-  // Check if user exists
+  // Create or update user in DB
   let user = await userModel.findOne({ phone });
-
   if (!user) {
-    // If not, create new patient
     user = await userModel.create({ name, phone, role: "patient" });
   }
 
-  // Save OTP + expiry to user
-  user.otp = hashedOtp;
-  user.otpExpire = otpExpire;
-  await user.save();
-
-  // Send OTP via Twilio (choose either SMS or WhatsApp)
   try {
-   await twilioClient.verify.v2
-      .services("VA3434802fedb2d44e921372d8da31472a")
-      .verifications.create({ to: "+919027948867", channel: "sms" })
-      .then((verification) => console.log(verification.sid));
+    // Twilio Verify generates its own OTP behind the scenes.
+    const verification = await twilioClient.verify.v2
+      .services(process.env.TWILIO_VERIFY_SERVICE_SID!)
+      .verifications.create({ to: phone, channel: "sms" });
+    console.log("Verify SID:", verification.sid);
+    return res.status(200).json({ message: "OTP sent via Twilio Verify" });
 
-
-    return res.status(200).json({ message: "OTP sent successfully" });
-  } catch (err:any) {
+   
+  } catch (err: any) {
     return res.status(500).json({ message: "Failed to send OTP", error: err });
   }
-  
+
+
+
 };
 
+// controllers/patient/auth.controller.ts
 
-
-
-
-
-// Use your Verify Service SID here (from environment or config)
-// const VERIFY_SERVICE_SID = process.env.TWILIO_VERIFY_SERVICE_SID || "";
-
-// export const sendOTP = async (req: Request, res: Response) => {
-//   const { phone, name } = req.body;
-
-//   if (!phone || !name) {
-//     return res.status(400).json({ message: "Phone and name are required" });
-//   }
-
-//   // Check if user exists, else create patient
-//   let user = await userModel.findOne({ phone });
-//   if (!user) {
-//     user = await userModel.create({ name, phone, role: "patient" });
-//   }
-
-//   try {
-//     // Send OTP via Twilio Verify API using Service SID
-//     // const verification = await twilioClient.verify
-//     //   .services(VERIFY_SERVICE_SID)
-//     //   .verifications.create({ to: phone, channel: "sms" }); // channel can be 'sms' or 'whatsapp'
-
-
-//     const res= await twilioClient.verify.v2
-//       .services("VA3434802fedb2d44e921372d8da31472a")
-//       .verifications.create({ to: "+919027948867", channel: "sms" })
-//       .then((verification) => console.log(verification.sid));
-
-
-//     return res
-//       .status(200)
-//       .json({ message: "OTP sent successfully", sid: verification.sid });
-//   } catch (error) {
-//     return res.status(500).json({ message: "Failed to send OTP", error });
-//   }
-// };
-
-
-
-
-// -----------------------------
-// ✅ 2. Verify OTP & Login
-// -----------------------------
 export const verifyOTP = async (req: Request, res: Response) => {
-  const { otp} = req.body;
-  const phone = req.headers["x-phone"] as string; // or get from req.body or req.query or JWT token
+    const { otp } = req.body;
+    const phone = req.headers["x-phone"] as string;
+  
+    // if (!phone || !otp) {
+    //   return res.status(400).json({ message: "Phone and OTP are required" });
+    // }
+  
+    try {
+      // Let Twilio Verify check the code
+      console.log(`otp is `, otp);
+      const verificationCheck = await twilioClient.verify.v2
+        .services(process.env.TWILIO_VERIFY_SERVICE_SID!)
+        .verificationChecks.create({ to: phone, code: otp });
 
-  if (!phone || !otp) {
-    return res.status(400).json({ message: "Phone and OTP are required" });
-  }
+      if (verificationCheck.status !== "approved") {
+        return res.status(400).json({ message: "Invalid OTP" });
+      }
 
-  if (!phone || !otp) {
-    return res.status(400).json({ message: "Phone and OTP are required" });
-  }
+      // OTP is valid; find user
+      const user = await userModel.findOne({ phone });
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
 
-  // Include otp (and otpExpire) even though they are select: false
-  const user = await userModel.findOne({ phone }).select("+otp +otpExpire");
+      // After OTP is approved and you have `user`:
+      const token = generateToken(user._id.toString());
 
-  console.log("user is:", user);
+      // Store session in Redis (so isAuthenticated sees it)
+      await redis.set(user._id, JSON.stringify(user), "EX", 7 * 24 * 60 * 60); // 7 days
 
- 
-  if (!user || !user.otp || !user.otpExpire) {
-    return res.status(404).json({ message: "User or OTP not found" });
-  }
+      // Set the cookie exactly as your loginUser flow does:
+      res.cookie("access_token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production", // false in dev
+        sameSite: "lax",
+        path: "/",
+        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      });
 
-  // Check OTP expiry
-  if (user.otpExpire < new Date()) {
-    return res.status(400).json({ message: "OTP expired" });
-  }
-
-  // Match OTP
-  const hashedInputOtp = crypto.createHash("sha256").update(otp).digest("hex");
-  if (user.otp !== hashedInputOtp) {
-    return res.status(400).json({ message: "Invalid OTP" });
-  }
-
-  // Clear OTP from DB after verification
-  user.otp = undefined;
-  user.otpExpire = undefined;
-  await user.save();
-
-  // Generate JWT token
-  const token = generateToken(user._id.toString());
-
-  return res.status(200).json({
-    message: "Login successful",
-    token,
-    user: {
-      _id: user._id,
-      name: user.name,
-      phone: user.phone,
-      role: user.role,
-    },
-  });
-};
+      // Return user info to frontend
+      return res.status(200).json({
+        message: "Login successful",
+        user: {
+          _id: user._id,
+          name: user.name,
+          phone: user.phone,
+          role: user.role,
+        },
+      });
+    } catch (err: any) {
+      return res
+        .status(500)
+        .json({ message: "OTP verification failed", error: err });
+    }
+  };
+  
+  
