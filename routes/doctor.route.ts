@@ -23,6 +23,7 @@ import { upload } from '../utils/multer'; // or configure for Cloudinary
 import { updateAccessToken } from '../controllers/user.controller';
 import { handleProfile } from '../utils/handler/handler.controller';
 import { createDoctorService, deleteDoctorService, getAllDoctorServices, getDoctorServiceStats, getSingleDoctorService, toggleDoctorServiceField, updateDoctorService } from '../controllers/doctor/services.controller';
+import { sendOTP, verifyOTP } from '../controllers/patient/auth.controller';
 
 
 //all profileform handler 
@@ -37,6 +38,16 @@ doctorRoute.post(
   createDoctorProfile
 );
 
+
+
+
+
+
+// Send OTP to phone
+doctorRoute.post("/auth/send-otp", sendOTP);
+
+// Verify OTP and login
+doctorRoute.post("/auth/verify-otp", verifyOTP);
 
 
 //created services
