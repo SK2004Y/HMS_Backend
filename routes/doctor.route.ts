@@ -24,9 +24,10 @@ import { updateAccessToken } from '../controllers/user.controller';
 import { handleProfile } from '../utils/handler/handler.controller';
 import { createDoctorService, deleteDoctorService, getAllDoctorServices, getDoctorServiceStats, getSingleDoctorService, toggleDoctorServiceField, updateDoctorService } from '../controllers/doctor/services.controller';
 import { sendOTP, verifyOTP } from '../controllers/patient/auth.controller';
+import { createPatientProfile } from '../controllers/patient/profile.controller';
 
 
-//all profileform handler 
+//all profileform checking completed or not handler 
 doctorRoute.get("/check-profile",updateAccessToken,isAuthneticated,handleProfile);
 doctorRoute.post(
   "/d-create-profile",
@@ -39,8 +40,17 @@ doctorRoute.post(
 );
 
 
+//patient router 
 
-
+doctorRoute.post(
+  "/patient-create-profile",
+  updateAccessToken,
+  isAuthneticated,
+  authorizeRoles("patient"),
+  upload.single("avatar"),
+  // 👈 middleware to parse stringified JSON
+  createPatientProfile
+);
 
 
 // Send OTP to phone
