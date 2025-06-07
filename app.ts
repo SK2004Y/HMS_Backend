@@ -62,7 +62,7 @@ app.use(
   cors({
     // origin:process.env.ORIGIN
     //fronted part running port url
-    origin: ["http://localhost:3000", 'http://192.168.31.253:3000'],
+    origin: ["http://localhost:3000", 'http://192.168.31.252:3000', ],
 
     credentials: true,
   })

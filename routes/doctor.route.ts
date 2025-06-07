@@ -25,6 +25,7 @@ import { handleProfile } from '../utils/handler/handler.controller';
 import { createDoctorService, deleteDoctorService, getAllDoctorServices, getDoctorServiceStats, getSingleDoctorService, toggleDoctorServiceField, updateDoctorService } from '../controllers/doctor/services.controller';
 import { sendOTP, verifyOTP } from '../controllers/patient/auth.controller';
 import { createPatientProfile } from '../controllers/patient/profile.controller';
+import { triggerSOS } from '../controllers/patient/sosalert.controller';
 
 
 //all profileform checking completed or not handler 
@@ -51,6 +52,16 @@ doctorRoute.post(
   // 👈 middleware to parse stringified JSON
   createPatientProfile
 );
+
+//Sos for patient
+doctorRoute.post(
+  "/trigger",
+  updateAccessToken,
+  isAuthneticated,
+  authorizeRoles("patient"),
+  triggerSOS
+);
+
 
 
 // Send OTP to phone
