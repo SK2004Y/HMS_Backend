@@ -357,8 +357,8 @@ const userSchema: Schema<IUser> = new mongoose.Schema(
     },
     phone: {
       type: String,
-      required: [false, "Phone number is required"],
       unique: true,
+      sparse: true,
     },
     email: {
       type: String,
