@@ -87,36 +87,11 @@ export const createDoctorService = CatchAsyncError(
   }
 );
 
-export const getAllDoctorServicess = CatchAsyncError(async (req: Request, res: Response) => {
-  const page = parseInt(req.query.page as string) || 1;
-  const limit = parseInt(req.query.limit as string) || 5; // Make it configurable (3 for demo)
-  const skip = (page - 1) * limit;
 
-  try {
-    console.log(
-      "Fetching services | Page:",
-      page,
-      "| Limit:",
-      limit,
-      "| Skip:",
-      skip
-    );
 
-    const services = await DoctorService.find().skip(skip).limit(limit);
-    const total = await DoctorService.countDocuments();
 
-    res.status(200).json({
-      services,
-      total,
-      page,
-      totalPages: Math.ceil(total / limit),
-    });
-  } catch (error) {
-    console.error("Error in getAllDoctorServices:", error);
-    res.status(500).json({ message: "Failed to fetch services", error });
-  }
 
-});
+
 
 
 //2nd 

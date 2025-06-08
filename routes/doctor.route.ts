@@ -3,10 +3,37 @@ import { createDoctorProfile, updateDoctorProfile, getDoctorProfile, getAllDocto
 import { DoctorModel } from '../modals/doctor.model';
 import { isAuthneticated, authorizeRoles } from '../middleware/auth';
 
-const doctorRoute = express.Router();
+ export const doctorRoute = express.Router();
+
+
+import {
+  createOrder,
+  getOrders,
+  updateOrderStatus,
+  getOrderById,
+} from "../controllers/order/order.controller";
 
 
 
+// @route   POST /api/orders
+// @desc    Create a new order
+// @access  Public or Authenticated
+doctorRoute.post("/create-orders", createOrder);
+
+// @route   GET /api/orders
+// @desc    Get all orders, optionally filter by userId
+// @access  Public or Admin
+doctorRoute.get("/get-orders", getOrders);
+
+// @route   GET /api/orders/:id
+// @desc    Get single order by ID
+// @access  Public or Authenticated
+doctorRoute.get("/get-order/:id", getOrderById);
+
+// @route   PUT /api/orders/:id/status
+// @desc    Update order status (pending, success, failed)
+// @access  Public (webhook) or Authenticated
+doctorRoute.put("/get-order/:id/status", updateOrderStatus);
 
 
 
@@ -84,9 +111,15 @@ doctorRoute.post(
 doctorRoute.post("/create", upload.single("image"), createDoctorService);
 doctorRoute.get("/allDoctorService/page",  updateAccessToken,
   isAuthneticated,
-  authorizeRoles("hospital"),getAllDoctorServices);
+ getAllDoctorServices);
 
-
+  doctorRoute.get(
+    "/allDoctorService/pages",
+    updateAccessToken,
+    isAuthneticated,
+    authorizeRoles("hospital"),
+    getAllDoctorServices
+  );
 
 
 
@@ -98,7 +131,7 @@ doctorRoute.patch(
   "/services/:id/toggle",
   updateAccessToken,
   isAuthneticated,
-  authorizeRoles("hospital"),
+  authorizeRoles("doctor"),
   toggleDoctorServiceField
 );
 

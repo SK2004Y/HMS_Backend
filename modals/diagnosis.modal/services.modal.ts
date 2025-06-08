@@ -2,7 +2,7 @@ import mongoose,{Document,Schema,Types} from "mongoose";
 
 //services interface
 
-export interface IDoctorServices {
+export interface IDiagnosticServices {
   userId: mongoose.Types.ObjectId;
   serviceName: string;
   fee: number;
@@ -60,7 +60,7 @@ export const socialLinkSchema = new Schema<ISocialLink>(
 );
 
 
-const doctorServiceSchema = new Schema<IDoctorServices>(
+const diagnosticServiceSchema = new Schema<IDiagnosticServices>(
   {
     userId: {
       type: Schema.Types.ObjectId,
@@ -88,15 +88,15 @@ const doctorServiceSchema = new Schema<IDoctorServices>(
     },
     mode: {
       type: String,
-    //   enum: ["Online", "Offline", "Hybrid", "InHome", "e-Clinic"],
+      //   enum: ["Online", "Offline", "Hybrid", "InHome", "e-Clinic"],
     },
-    isAvailable:{
-      type:Boolean,
-      default:true,
+    isAvailable: {
+      type: Boolean,
+      default: true,
     },
-    lead:{
-      type:Boolean,
-      default:false
+    lead: {
+      type: Boolean,
+      default: false,
     },
     duration: {
       type: String,
@@ -111,7 +111,10 @@ const doctorServiceSchema = new Schema<IDoctorServices>(
   { timestamps: true }
 );
 
-export const DoctorService =mongoose.model<IDoctorServices>("DoctorService",doctorServiceSchema);
+export const DiagnosticService = mongoose.model<IDiagnosticServices>(
+  "DiagnosticService",
+  diagnosticServiceSchema
+);
 
 
 
