@@ -97,4 +97,6 @@ const profileSchema = new Schema<IProfile>(
   { timestamps: true }
 );
 
+
+profileSchema.index({ location: "2dsphere" }); // Index for geospatial queries 
 export const DoctorProfile=mongoose.model<IProfile>("DoctorProfile",profileSchema);

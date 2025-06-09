@@ -103,7 +103,7 @@ doctorRoute.post(
   "/create-service",
   updateAccessToken,
   isAuthneticated,
-  authorizeRoles("hospital"),
+  authorizeRoles("doctor"),
   upload.single("image"),
   createDoctorService
 );

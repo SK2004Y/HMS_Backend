@@ -72,6 +72,7 @@ export const AllDoctorServices = CatchAsyncError(
 
       res.status(200).json({
         services,
+        title: "Doctor Services",
         total,
         page,
         totalPages: Math.ceil(total / limit),
@@ -537,3 +538,136 @@ export const AllGymervices = CatchAsyncError(
 
 
 
+
+
+
+
+export const DoctorallServices = CatchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+ 
+        const { lat, lng } = req.query;
+        const latNum = Number(lat);
+        const lngNum = Number(lng);
+        // const maxDistanceMeters = Number(maxDistanceKm) * 1000;
+
+        if (isNaN(latNum) || isNaN(lngNum)) {
+          return res.status(400).json({ message: "Missing or invalid lat/lng" });
+        }
+  
+        const results = await DoctorService.aggregate([
+          {
+            $geoNear: {
+              near: { type: "Point", coordinates: [lngNum, latNum] },
+              distanceField: "distance",
+              // maxDistance: 20000, // 20 km
+              spherical: true,
+            },
+          },
+          {
+            $match: { isAvailable: true },
+          },
+          {
+            $addFields: {
+              distanceInKm: { $round: [{ $divide: ["$distance", 1000] }, 2] },
+            },
+          },
+          // {
+          //   $project: {
+          //     serviceName: 1,
+          //     specialty: 1,
+          //     distanceInKm: 1,
+          //   },
+          // },
+          { $limit: 20 },
+        ]);
+ 
+      // Step 4: Respond with success and created profile
+      res.json({ data: results});
+    } catch (error: any) {
+      return next(new ErrorHandler(error.message, 400));
+    }
+  }
+);
+
+
+
+export const DoctorallServicess = CatchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      // 1. Extract and validate query params
+      const { q, lat, lng } = req.query;
+      const searchTerm =
+        typeof q === "string" && q.trim() !== "" ? q.trim() : null;
+      const latNum = lat ? Number(lat) : null;
+      const lngNum = lng ? Number(lng) : null;
+
+      // 2. Start building the aggregation pipeline
+      const pipeline: any[] = [];
+
+      // 3. If we have both lat & lng, add a geoNear stage up front
+      if (
+        latNum != null &&
+        lngNum != null &&
+        !isNaN(latNum) &&
+        !isNaN(lngNum)
+      ) {
+        pipeline.push({
+          $geoNear: {
+            near: { type: "Point", coordinates: [lngNum, latNum] },
+            distanceField: "distance",
+            spherical: true,
+          },
+        });
+      }
+
+      // 4. Always only show available services
+      pipeline.push({
+        $match: { isAvailable: true },
+      });
+
+      // 5. If there's a text search, match against serviceName OR specialty
+      if (searchTerm) {
+        pipeline.push({
+          $match: {
+            $or: [
+              { serviceName: { $regex: searchTerm, $options: "i" } },
+              { specialty: { $regex: searchTerm, $options: "i" } },
+            ],
+          },
+        });
+      }
+
+      // 6. Round the distance (in meters) into km with 2 decimals
+      pipeline.push({
+        $addFields: {
+          distanceInKm: {
+            $round: [{ $divide: ["$distance", 1000] }, 2],
+          },
+        },
+      });
+
+      // 7. (Optional) Project only fields you need
+      // pipeline.push({
+      //   $project: {
+      //     serviceName: 1,
+      //     specialty: 1,
+      //     fee: 1,
+      //     distanceInKm: 1,
+      //     location: 1,
+      //   },
+      // });
+
+      // 8. Limit to 20 results
+      pipeline.push({ $limit: 20 });
+
+      // 9. Run aggregation
+      const results = await DoctorService.aggregate(pipeline);
+
+      // 10. Send JSON back
+      return res.status(200).json({ data: results });
+    } catch (error: any) {
+      return next(new ErrorHandler(error.message, 400));
+    }
+  }
+);

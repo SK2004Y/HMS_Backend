@@ -62,8 +62,21 @@ export const createDoctorService = CatchAsyncError(
         avatarData = await streamUploadToCloudinary(req.file, "doctor-service");
       }
 
+
+
+   let location = {};
+
+   try {
+     location = JSON.parse(req.body.location);
+   } catch (err) {
+     return res
+       .status(400)
+       .json({ success: false, message: "Invalid location data" });
+   }
+
       const parsedBody = {
         ...req.body,
+        location,
       };
 
       const doctor = new DoctorService({
@@ -86,6 +99,8 @@ export const createDoctorService = CatchAsyncError(
     }
   }
 );
+
+
 
 
 

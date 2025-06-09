@@ -13,11 +13,20 @@ export interface IDoctorServices {
   };
   mode: string;
   isAvailable: boolean;
-  lead:boolean,
+  lead: boolean;
   duration?: string;
   description: string;
   reviews?: IReview;
   socialLink?: [ISocialLink];
+  location?: {
+    type: "Point";
+    coordinates: [number, number];
+    city?: string;
+    state?: string;
+    pincode?: string;
+    address: string;
+    landmark: string;
+  };
 }
 
 //review interface
@@ -88,15 +97,15 @@ const doctorServiceSchema = new Schema<IDoctorServices>(
     },
     mode: {
       type: String,
-    //   enum: ["Online", "Offline", "Hybrid", "InHome", "e-Clinic"],
+      //   enum: ["Online", "Offline", "Hybrid", "InHome", "e-Clinic"],
     },
-    isAvailable:{
-      type:Boolean,
-      default:true,
+    isAvailable: {
+      type: Boolean,
+      default: true,
     },
-    lead:{
-      type:Boolean,
-      default:false
+    lead: {
+      type: Boolean,
+      default: false,
     },
     duration: {
       type: String,
@@ -107,10 +116,25 @@ const doctorServiceSchema = new Schema<IDoctorServices>(
     },
     reviews: ReviewSchema,
     socialLink: socialLinkSchema,
+
+    location: {
+      type: {
+        type: String,
+        enum: ["Point"],
+        default: "Point",
+      },
+      coordinates: { type: [Number], required: true },
+      city: String,
+      state: String,
+      pincode: String,
+      address: String,
+      landmark: String,
+    },
   },
+
   { timestamps: true }
 );
-
+doctorServiceSchema.index({ location: "2dsphere" });
 export const DoctorService =mongoose.model<IDoctorServices>("DoctorService",doctorServiceSchema);
 
 
