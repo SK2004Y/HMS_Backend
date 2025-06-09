@@ -27,6 +27,7 @@ export interface IDoctorServices {
     address: string;
     landmark: string;
   };
+  serviceType?: string; // e.g., "Consultation", "Surgery", etc.
 }
 
 //review interface
@@ -129,6 +130,10 @@ const doctorServiceSchema = new Schema<IDoctorServices>(
       pincode: String,
       address: String,
       landmark: String,
+    },
+    serviceType:{
+      type:String,
+      default:"doctor"
     },
   },
 

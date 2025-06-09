@@ -2,7 +2,7 @@ import express from "express"
 import { Router } from "express"
 import { isAuthneticated } from "../../middleware/auth"
 import { updateAccessToken } from "../../controllers/user.controller"
-import { AllDiagnosticServices, AllDoctorServices, AllGymervices, AllHospitalServices, AllPharmacyServices, AllRadiologyServices, AllResortervices, DoctorallServices, DoctorallServicess, SingleDiagnosticService, SingleDoctorService, SingleGymService, SingleHospitalService, SinglePharmacyService, SingleRadiologyService, SingleResortService } from "../../controllers/patient/service.controller"
+import { AllDiagnosticServices, AllDoctorServices, AllGymervices, AllHospitalServices, AllPharmacyServices, AllRadiologyServices, AllResortervices, DoctorallServices, DoctorallServicess, searchServices, SingleDiagnosticService, SingleDoctorService, SingleGymService, SingleHospitalService, SinglePharmacyService, SingleRadiologyService, SingleResortService } from "../../controllers/patient/service.controller"
 
 
 const PatientRouter= express.Router()
@@ -11,7 +11,7 @@ const PatientRouter= express.Router()
 //doctor 
 PatientRouter.get("/doctorServices/page",AllDoctorServices);
 PatientRouter.get("/Services/pages", DoctorallServices);
-PatientRouter.get("/doctorService/p", DoctorallServicess);
+PatientRouter.get("/doctorService/p", searchServices);
 PatientRouter.get("/doctorService/:id",SingleDoctorService);
 
 
