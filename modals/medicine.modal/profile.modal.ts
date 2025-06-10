@@ -4,9 +4,7 @@ import mongoose,{Schema,Document,Types} from "mongoose";
 //interface 
 export interface IProfile{
   userId: mongoose.Types.ObjectId;
-    specialization:string[];
     registrationNumber:string;
-    experience:number;
     gstNumber?:string;
     licenceNumber?:string;
     gender?:string;
@@ -36,20 +34,12 @@ export interface IProfile{
 const profileSchema = new Schema<IProfile>(
   {
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    specialization: [
-      {
-        type: String,
-        require: [true, "Please enter your specialization"],
-      },
-    ],
+   
     registrationNumber: {
       type: String,
-      required: [true, "Please enter your Registration Number"],
+     
     },
-    experience: {
-      type: Number,
-      required: [true, "please enter your experience"],
-    },
+  
     gstNumber: {
       type: String,
     },
@@ -65,7 +55,7 @@ const profileSchema = new Schema<IProfile>(
         enum: ["Point"],
         default: "Point",
       },
-      coordinates: { type: [Number], required: true },
+      coordinates: { type: [Number], },
       city: String,
       state: String,
       pincode: String,

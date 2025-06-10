@@ -9,7 +9,7 @@ import { MedicineProfile } from "../../modals/medicine.modal/profile.modal";
 export const createMedicineProfile = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      console.log("API hit: createDoctorProfile");
+      console.log("API hit: completeMedicineProfile");
       console.log("Request Body:", req.body);
       console.log("File:", req.file);
       let avatarData = {
@@ -72,3 +72,6 @@ export const createMedicineProfile = CatchAsyncError(
     }
   }
 );
+
+
+

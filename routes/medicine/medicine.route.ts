@@ -32,7 +32,7 @@ MedicineRoute.post(
   "/create-profile",
   updateAccessToken,
   isAuthneticated,
-  authorizeRoles("medicine"),
+  authorizeRoles("pharmacy"),
   upload.single("avatar"),
   // 👈 middleware to parse stringified JSON
   createMedicineProfile
