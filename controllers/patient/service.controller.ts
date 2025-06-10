@@ -9,7 +9,7 @@ import { AmbulanceService } from "../../modals/ambulance.modal/services.modal";
 import { PharmacyService } from "../../modals/medicine.modal/services.modal";
 import ErrorHandler from "../../utils/ErrorHandler";
 import express, {NextFunction,Request,Response}  from "express"
-
+import {redis} from "../../utils/redis"
 //patient services get pay for it 
 export const SingleDoctorService = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -83,6 +83,246 @@ export const AllDoctorServices = CatchAsyncError(
     }
   }
 );
+
+
+
+
+
+//all services controller 
+
+
+
+// Utility to build a $geoNear stage if coords are provided
+// const buildGeoNear = (lng: number, lat: number) => ({
+//   $geoNear: {
+//     near: { type: "Point", coordinates: [lng, lat] },
+//     distanceField: "distance",
+//     spherical: true,
+//     query: { isActive: true }, // Only include active services
+//   },
+// });
+
+// // Controller: fetch top 18 services per role, sorted by rating (and distance if geo)
+// export const getAllServices = async (req: Request, res: Response) => {
+//   try {
+//     const { lng, lat } = req.query;
+
+//     // Determine if valid coordinates were passed
+//     const useGeo =
+//       typeof lng === "string" &&
+//       typeof lat === "string" &&
+//       !isNaN(Number(lng)) &&
+//       !isNaN(Number(lat));
+//     const longitude = Number(lng);
+//     const latitude = Number(lat);
+
+//     // Build the shared pipeline for each role
+//     const buildPipeline = (withGeo: boolean) => {
+//       const pipeline: any[] = [];
+
+//       // 1) Optional: geo-distance sort if we have coords
+//       if (withGeo) {
+//         pipeline.push(buildGeoNear(longitude, latitude));
+//       } else {
+//         // Otherwise, just filter to active services
+//         pipeline.push({ $match: { isAvailable: true } });
+//       }
+
+//       // 2) Sort by rating descending (highest rated first)
+//       // pipeline.push({ $sort: { rating: -1 } });
+
+//       // 3) Limit to top 18 for this role
+//       pipeline.push({ $limit: 18 });
+
+//       return pipeline;
+//     };
+
+//     // Run all five aggregations in parallel, tagging each result
+//     const [
+//       doctors,
+//       ambulances,
+//       diagnostics,
+//       radiologies,
+//       resorts,
+//     ] = await Promise.all([
+//       DoctorService.aggregate(buildPipeline(useGeo)).then((docs) =>
+//         docs.map((doc) => ({ ...doc, serviceType: "doctor" }))
+//       ),
+//       AmbulanceService.aggregate(buildPipeline(useGeo)).then((docs) =>
+//         docs.map((doc) => ({ ...doc, serviceType: "ambulance" }))
+//       ),
+//       DiagnosticService.aggregate(buildPipeline(useGeo)).then((docs) =>
+//         docs.map((doc) => ({ ...doc, serviceType: "diagnostic" }))
+//       ),
+//       RadiologyService.aggregate(buildPipeline(useGeo)).then((docs) =>
+//         docs.map((doc) => ({ ...doc, serviceType: "radiology" }))
+//       ),
+//       ResortService.aggregate(buildPipeline(useGeo)).then((docs) =>
+//         docs.map((doc) => ({ ...doc, serviceType: "resort" }))
+//       ),
+//     ]);
+
+//     // Merge all five arrays into one
+//     const allServices = [
+//       ...doctors,
+//       ...ambulances,
+//       ...diagnostics,
+//       ...radiologies,
+//       ...resorts,
+//     ];
+
+//     // Return combined result
+//     return res.status(200).json({
+//       success: true,
+//       total: allServices.length,
+//       services: allServices,
+//     });
+//   } catch (err) {
+//     console.error("Error in getAllServices controller:", err);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Internal server error while fetching services",
+//     });
+//   }
+// };
+
+
+
+// controllers/service.controller.ts
+
+
+
+// ✅ Build $geoNear stage if coords are provided
+const buildGeoNear = (lng: number, lat: number) => ({
+  $geoNear: {
+    near: { type: "Point", coordinates: [lng, lat] },
+    distanceField: "distance",
+    spherical: true,
+    query: { isActive: true }, // Only include active services
+  },
+});
+
+// ✅ Controller to get all services (active + top rated) with optional geolocation
+export const getAllServices = async (req: Request, res: Response) => {
+  try {
+    const { lng, lat } = req.query;
+
+    // ✅ Use Geo only if valid coordinates are provided
+    const useGeo =
+      typeof lng === "string" &&
+      typeof lat === "string" &&
+      !isNaN(Number(lng)) &&
+      !isNaN(Number(lat));
+    const longitude = Number(lng);
+    const latitude = Number(lat);
+
+    // ✅ Construct Redis cache key based on query (geo or not)
+    const cacheKey = useGeo
+      ? `services:geo:${latitude}:${longitude}`
+      : "services:all";
+
+    // ✅ Try to fetch from Redis cache
+    const cachedData = await redis.get(cacheKey);
+    if (cachedData) {
+      const parsed = JSON.parse(cachedData as string); // 👈 safely parse
+      return res.status(200).json({
+        success: true,
+        total: parsed.services.length,
+        services: parsed.services,
+        source: "cache",
+      });
+    }
+    
+
+    // ✅ Build the MongoDB pipeline
+    const buildPipeline = (geo: boolean) => {
+      const pipeline: any[] = [];
+
+      if (geo) {
+        pipeline.push(buildGeoNear(longitude, latitude));
+      } else {
+        pipeline.push({ $match: { isAvailable: true } });
+      }
+
+      // pipeline.push({ $sort: { rating: -1 } });
+      pipeline.push({ $limit: 18 });
+
+      return pipeline;
+    };
+
+    // ✅ Parallel aggregation from all service models
+    const [
+      doctors,
+      ambulances,
+      diagnostics,
+      radiologies,
+      resorts,
+    ] = await Promise.all([
+      DoctorService.aggregate(buildPipeline(useGeo)).then((docs) =>
+        docs.map((doc) => ({ ...doc, serviceType: "doctor" }))
+      ),
+      AmbulanceService.aggregate(buildPipeline(useGeo)).then((docs) =>
+        docs.map((doc) => ({ ...doc, serviceType: "ambulance" }))
+      ),
+      DiagnosticService.aggregate(buildPipeline(useGeo)).then((docs) =>
+        docs.map((doc) => ({ ...doc, serviceType: "diagnostic" }))
+      ),
+      RadiologyService.aggregate(buildPipeline(useGeo)).then((docs) =>
+        docs.map((doc) => ({ ...doc, serviceType: "radiology" }))
+      ),
+      ResortService.aggregate(buildPipeline(useGeo)).then((docs) =>
+        docs.map((doc) => ({ ...doc, serviceType: "resort" }))
+      ),
+    ]);
+
+    // ✅ Merge into one combined array
+    const allServices = [
+      ...doctors,
+      ...ambulances,
+      ...diagnostics,
+      ...radiologies,
+      ...resorts,
+    ];
+
+    // ✅ Store in Redis cache with short TTL (e.g., 5 minutes)
+    await redis.set(
+      cacheKey,
+      JSON.stringify({ services: allServices }),
+      "EX",
+      100
+    );
+
+    return res.status(200).json({
+      success: true,
+      total: allServices.length,
+      services: allServices,
+      source: "database",
+    });
+  } catch (err) {
+    console.error("Error in getAllServices controller:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error while fetching services",
+    });
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -4,17 +4,29 @@ import mongoose,{Document,Schema,Types} from "mongoose";
 
 export interface IHospitalServices{
     userId:mongoose.Types.ObjectId
-    name:string;
-    price:number;
-    discount?:number;
-    picture?:{
+    serviceName:string;
+    fee:number;
+    estimatedPrice?:number;
+    image?:{
         url:string;
         public_id:string;
     };
     mode:string;
     description:string;
     reviews?:IReview;
-    socialLink?:[ISocialLink]
+    socialLink?:[ISocialLink],
+    isAvailable?:boolean;
+    lead?:boolean;
+    location?:{
+        type:"Point";
+        coordinates:[number,number];
+        city?:string;
+        state?:string;
+        pincode?:string;
+        address:string;
+        landmark:string;
+    };
+    serviceType?:string; // e.g., "Consultation", "Surgery", etc.
 }
 
 //review interface
@@ -57,44 +69,72 @@ export const socialLinkSchema = new Schema<ISocialLink>(
 );
 
 
-const hospitalServiceSchema=new Schema<IHospitalServices>({
-userId:{
-    type:Schema.Types.ObjectId,
-    ref:"User",
-    required:true
-},
-name:{
-    type:String,
-    required:[true,"please enter a service name"]
-},
-price:{
-    type:Number,
-    required:[true,"please enter a service price "]
-},
-discount:{
-    type:Number
-},
-picture:{
-    url:{
-        type:String,
+const hospitalServiceSchema = new Schema<IHospitalServices>(
+  {
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
     },
-    public_id:{
-        type:String,
+    serviceName: {
+      type: String,
+      required: [true, "please enter a service name"],
+    },
+    fee: {
+      type: Number,
+      required: [true, "please enter a service price "],
+    },
+    estimatedPrice: {
+      type: Number,
+    },
+    image: {
+      url: {
+        type: String,
+      },
+      public_id: {
+        type: String,
+      },
+    },
+    mode: {
+      type: String,
+      enum: ["Online", "Offline", "Hybrid", "InHome", "e-Clinic"],
+    },
+    description: {
+      type: String,
+      required: [true, "Please enter a something about servics"],
+    },
+    reviews: ReviewSchema,
+    socialLink: socialLinkSchema,
+    isAvailable: {
+      type: Boolean,
+      default: true,
+    },
+    lead: {
+      type: Boolean,
+      default: false,
+    },
+    location: {
+      type: {
+        type: String,
+        enum: ["Point"],
+        default: "Point",
+      },
+      coordinates: { type: [Number] },
+      city: String,
+      state: String,
+      pincode: String,
+      address: String,
+      landmark: String,
+    },
+    serviceType: {
+      type: String,
+      default: "hospital",
+    },
+  },
+  { timestamps: true }
+);
 
-    }
-},
-mode:{
-    type:String,
-    enum:["Online","Offline","Hybrid","InHome","e-Clinic"]
-},
-description:{
-    type:String,
-    required:[true,"Please enter a something about servics"]
-},
-reviews:ReviewSchema,
-socialLink:socialLinkSchema
-},{timestamps:true});
-
+hospitalServiceSchema.index({ location: "2dsphere" }); // For geospatial queries
 
 export const HospitalService =mongoose.model<IHospitalServices>("HospitalService",hospitalServiceSchema);
 

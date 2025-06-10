@@ -18,6 +18,16 @@ export interface IDiagnosticServices {
   description: string;
   reviews?: IReview;
   socialLink?: [ISocialLink];
+  location?: {
+    type: "Point";
+    coordinates: [number, number];
+    city?: string;
+    state?: string;
+    pincode?: string;
+    address: string;
+    landmark: string;
+  };
+  serviceType?: string; // e.g., "Consultation", "Surgery", etc.
 }
 
 //review interface
@@ -107,10 +117,28 @@ const diagnosticServiceSchema = new Schema<IDiagnosticServices>(
     },
     reviews: ReviewSchema,
     socialLink: socialLinkSchema,
+    location: {
+      type: {
+        type: String,
+        enum: ["Point"],
+        default: "Point",
+      },
+      coordinates: { type: [Number], required: true },
+      city: String,
+      state: String,
+      pincode: String,
+      address: String,
+      landmark: String,
+    },
+    serviceType: {
+      type: String,
+      default: "diagnostic",
+    },
   },
   { timestamps: true }
 );
 
+diagnosticServiceSchema.index({ location: "2dsphere" }); // For geospatial queries
 export const DiagnosticService = mongoose.model<IDiagnosticServices>(
   "DiagnosticService",
   diagnosticServiceSchema

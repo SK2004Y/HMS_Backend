@@ -5,7 +5,7 @@ import { DoctorService } from "../../modals/doctor.modal/services.modal";
 import { DiagnosticModel } from "../../modals/diagnostic.model";
 import ErrorHandler from "../../utils/ErrorHandler";
 
-export const createDoctorService = CatchAsyncError(
+export const createDiagnosticService = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       let avatarData = {

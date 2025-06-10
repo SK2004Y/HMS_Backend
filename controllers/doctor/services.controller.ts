@@ -81,7 +81,7 @@ export const createDoctorService = CatchAsyncError(
 
       const doctor = new DoctorService({
         ...parsedBody,
-        avatar: {
+        image: {
           url: avatarData.secure_url,
           public_id: avatarData.public_id,
         },
@@ -265,6 +265,8 @@ export const getDoctorServiceStats = CatchAsyncError(
 
 
 
+
+
 // PATCH /api/services/:id/toggle
 export const toggleDoctorServiceField = CatchAsyncError(
   async (req: Request, res: Response) => {
@@ -278,6 +280,8 @@ export const toggleDoctorServiceField = CatchAsyncError(
         .json({ success: false, message: "Invalid toggle field." });
     }
 
+
+    
     const service = await DoctorService.findById(id);
     if (!service) {
       return res

@@ -111,21 +111,13 @@ doctorRoute.post(
 doctorRoute.post("/create", upload.single("image"), createDoctorService);
 doctorRoute.get("/allDoctorService/page",  updateAccessToken,
   isAuthneticated,
+  authorizeRoles("doctor"),
  getAllDoctorServices);
 
-  doctorRoute.get(
-    "/allDoctorService/pages",
-    updateAccessToken,
-    isAuthneticated,
-    authorizeRoles("hospital"),
-    getAllDoctorServices
-  );
 
-
-
-doctorRoute.get("/service/:id",updateAccessToken,isAuthneticated,authorizeRoles("hospital"),getSingleDoctorService);
+doctorRoute.get("/service/:id",updateAccessToken,isAuthneticated,authorizeRoles("doctor"),getSingleDoctorService);
 doctorRoute.put("/update/:id", upload.single("image"), updateDoctorService);
-doctorRoute.delete("/delete/:id", deleteDoctorService);
+doctorRoute.delete("/delete/:id",updateAccessToken,isAuthneticated,authorizeRoles("doctor"), deleteDoctorService);
 
 doctorRoute.patch(
   "/services/:id/toggle",
