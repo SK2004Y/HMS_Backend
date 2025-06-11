@@ -87,4 +87,4 @@ const profileSchema = new Schema<IProfile>(
   { timestamps: true }
 );
 
-export const MedicineProfile=mongoose.model<IProfile>("MedicineProfile",profileSchema);
+export const PharmacyProfile=mongoose.model<IProfile>("PharmacyProfile",profileSchema);

@@ -5,11 +5,11 @@ import express,{NextFunction,Request,Response} from "express"
 import ErrorHandler from "../../utils/ErrorHandler";
 import { HospitalProfile } from "../../modals/hospital.modal/profile.modal";
 import { MedicineModel } from "../../modals/medicineshop.model";
-import { MedicineProfile } from "../../modals/medicine.modal/profile.modal";
+import { PharmacyProfile } from "../../modals/medicine.modal/profile.modal";
 export const createMedicineProfile = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      console.log("API hit: completeMedicineProfile");
+      console.log("API hit: completePharmacy");
       console.log("Request Body:", req.body);
       console.log("File:", req.file);
       let avatarData = {
@@ -44,7 +44,7 @@ export const createMedicineProfile = CatchAsyncError(
         location,
         accountDetails,
       };
-      const existingProfile = await MedicineProfile.findOne({
+      const existingProfile = await PharmacyProfile.findOne({
         userId: req.body.userId,
       });
       if (existingProfile) {
@@ -52,7 +52,7 @@ export const createMedicineProfile = CatchAsyncError(
           .status(400)
           .json({ message: "Profile already exists for this user." });
       }
-      const doctor = new MedicineProfile({
+      const doctor = new PharmacyProfile({
         ...parsedBody,
         avatar: {
           url: avatarData.secure_url,

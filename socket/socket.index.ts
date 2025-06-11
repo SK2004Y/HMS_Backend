@@ -21,7 +21,7 @@ export const setupSocket = (server: HTTPServer) => {
   const onlineUsers = new Map<string, string>();
 
 
-  // io.on("connection", (socket: Socket) => {
+
   //   const userId = socket.handshake.query.userId as string;
 
   //   if (userId) {

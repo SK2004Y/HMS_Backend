@@ -38,7 +38,7 @@ AmbulanceRoute.post(
   "/create-profile",
   updateAccessToken,
   isAuthneticated,
-  authorizeRoles("medicine"),
+  authorizeRoles("ambulance"),
   upload.single("avatar"),
   // 👈 middleware to parse stringified JSON
   createAmbulanceProfile

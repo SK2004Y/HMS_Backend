@@ -4,7 +4,7 @@ import mongoose,{Schema,Document,Types} from "mongoose";
 //interface 
 export interface IProfile{
   userId: mongoose.Types.ObjectId;
-    specialization:string[];
+  ambulanceNumber?:string;
     registrationNumber:string;
     experience:number;
     gstNumber?:string;
@@ -36,12 +36,9 @@ export interface IProfile{
 const profileSchema = new Schema<IProfile>(
   {
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    specialization: [
-      {
-        type: String,
-        require: [true, "Please enter your specialization"],
-      },
-    ],
+    ambulanceNumber: {
+      type: String,
+    },
     registrationNumber: {
       type: String,
       required: [true, "Please enter your Registration Number"],
