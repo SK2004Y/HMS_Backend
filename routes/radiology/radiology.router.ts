@@ -24,6 +24,7 @@ import { updateAccessToken } from "../../controllers/user.controller";
 import { handleProfile } from "../../utils/handler/handler.controller";
 import { createHospitalProfile } from '../../controllers/Hospital/profile.controller';
 import { createRadiologyProfile } from '../../controllers/radiology/profile.controller';
+import { createRadiologyService } from '../../controllers/radiology/services.controller';
 
 
 //all profileform handler 
@@ -43,5 +44,24 @@ RadiologyRoute.post(
   createRadiologyProfile
 );
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//service radiology || pathology
+
+
+
+RadiologyRoute.post("/create-service",updateAccessToken,isAuthneticated,createRadiologyService)
 
 export default RadiologyRoute;

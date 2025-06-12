@@ -1,32 +1,41 @@
-import mongoose,{Document,Schema,Types} from "mongoose";
+import mongoose, { Document, Schema, Types } from "mongoose";
 
 //services interface
 
-export interface IRadiologyServices{
-    userId:mongoose.Types.ObjectId
-    serviceName:string;
-    fee:number;
-    estimatedPrice?:number;
-    image?:{
-        url:string;
-        public_id:string;
-    };
-    mode:string;
-    description:string;
-    reviews?:IReview;
-    socialLink?:[ISocialLink];
-    isAvailable?:boolean;
-    lead?:boolean;
-    location?:{
-        type:"Point";
-        coordinates:[number,number];
-        city?:string;
-        state?:string;
-        pincode?:string;
-        address:string;
-        landmark:string;
-    };
-    serviceType?:string; // e.g., "Consultation", "Surgery", etc.
+export interface IReport {
+  reportsname: string[];
+  courierfee: number;
+  persornfee: number;
+}
+
+export interface IRadiologyServices {
+  userId: mongoose.Types.ObjectId;
+  category: string;
+  serviceName: string;
+  description: string;
+  mode: string[];
+  fee: number;
+  estimatedPrice?: number;
+  reports: IReport[];
+  image?: {
+    url: string;
+    public_id: string;
+  };
+
+  reviews?: IReview[];
+  socialLink?: ISocialLink[];
+  isAvailable?: boolean;
+  lead?: boolean;
+  location?: {
+    type: "Point";
+    coordinates?: [number, number];
+    city?: string;
+    state?: string;
+    pincode?: string;
+    address: string;
+    landmark: string;
+  };
+  serviceType?: string; // e.g., "Consultation", "Surgery", etc.
 }
 
 //review interface
@@ -38,14 +47,29 @@ export interface IReview {
   createdAt?: Date;
 }
 
-//social paltform interface 
-export interface ISocialLink{
-    platform:string;
-    url:string;
+//social paltform interface
+export interface ISocialLink {
+  platform: string;
+  url: string;
 }
 
+//IReport schema
 
-//review Schema 
+export const ReportSchema = new mongoose.Schema<IReport>({
+  reportsname: [
+    {
+      type: String,
+    },
+  ],
+  courierfee: {
+    type: Number,
+  },
+  persornfee: {
+    type: Number,
+  },
+});
+
+//review Schema
 export const ReviewSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -58,8 +82,7 @@ export const ReviewSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
-
-//socialLinkSchema 
+//socialLinkSchema
 export const socialLinkSchema = new Schema<ISocialLink>(
   {
     platform: { type: String, required: true },
@@ -68,13 +91,16 @@ export const socialLinkSchema = new Schema<ISocialLink>(
   { _id: false }
 );
 
-
 const radiologyServiceSchema = new Schema<IRadiologyServices>(
   {
     userId: {
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
+    },
+    category: {
+      type: String,
+      required: [true, "Please select Category"],
     },
     serviceName: {
       type: String,
@@ -95,13 +121,17 @@ const radiologyServiceSchema = new Schema<IRadiologyServices>(
         type: String,
       },
     },
-    mode: {
-      type: String,
-    },
+    mode: [
+      {
+        type: String,
+      },
+    ],
+
     description: {
       type: String,
       required: [true, "Please enter a something about servics"],
     },
+    reports: [ReportSchema],
     reviews: ReviewSchema,
     socialLink: socialLinkSchema,
     isAvailable: {
@@ -133,7 +163,8 @@ const radiologyServiceSchema = new Schema<IRadiologyServices>(
   { timestamps: true }
 );
 
-radiologyServiceSchema.index({location: "2dsphere"});
-export const RadiologyService =mongoose.model<IRadiologyServices>("RadiologyService",radiologyServiceSchema);
-
-
+radiologyServiceSchema.index({ location: "2dsphere" });
+export const RadiologyService = mongoose.model<IRadiologyServices>(
+  "RadiologyService",
+  radiologyServiceSchema
+);

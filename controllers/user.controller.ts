@@ -31,146 +31,17 @@ import { ResortModel } from "../modals/resort.model";
 import { MedicineModel } from "../modals/medicineshop.model";
 
 
-//register user
 
-interface IRegistrationBody {
-  name: string;
-  email: string;
-  role: string;
-  password: string;
-  avatar?: string;
-}
-
-// export const registrationUser = CatchAsyncError(
-//   async (req: Request, res: Response, next: NextFunction) => {
-//     try {
-//       const { name, email, password } = req.body;
-//       const isEmailExist = await userModel.findOne({ email });
-//       if (isEmailExist) {
-//         return next(new ErrorHandler("Email already exist", 400));
-//       }
-
-//       const user: IRegistrationBody = {
-//         name,
-//         email,
-//         password,
-//       };
-
-//       const activationToken = createActivationToken(user);
-
-//       const activationCode = activationToken.activationCode;
-
-//       const data = { user: { name: user.name }, activationCode };
-//       const html = await ejs.renderFile(
-//         path.join(__dirname, "../mails/activation-mail.ejs"),
-//         data
-//       );
-
-//       console.log("User data before token:", user);
-//       console.log("Activation Token:", activationToken);
-//       console.log("Email to be sent to:", user.email);
-
-//       // try {
-//        await sendMail({
-//           email: user.email,
-//           subject: "Activate your account ",
-//           template: "activation-mail.ejs",
-//           text:"hello",
-//           data
-//         });
-
-//         res.status(201).json({
-//           success: true,
-//           message: `Please check your email : ${user.email} to activate your account!`,
-//           activationToken: activationToken.token,
-//         });
-
-//       } catch (error: any) {
-//         return next(new ErrorHandler(error.message, 400));
-//       }
-//     // } catch (error: any) {
-//     //   return next(new ErrorHandler(error.message, 400));
-//     // }
-//   }
-// );
-
-// export const registrationUser = CatchAsyncError(
-//   async (req: Request, res: Response, next: NextFunction) => {
-//     try {
-//       const { name, email, password } = req.body;
-//       const isEmailExist = await userModel.findOne({ email });
-//       if (isEmailExist)
-//         return next(new ErrorHandler("Email already exists", 400));
-
-//       const user: IRegistrationBody = { name, email, password };
-//       const activationToken = createActivationToken(user);
-//       const activationCode = activationToken.activationCode;
-
-//       const data = { user: { name: user.name }, activationCode };
-
-//       console.log("✅ User data before token:", user);
-//       console.log("✅ Activation Token:", activationToken);
-//       console.log("✅ Email to be sent to:", user.email);
-
-// }
-
-// export const registrationUser = CatchAsyncError(
-//   async (req: Request, res: Response, next: NextFunction) => {
-//     try {
-//       const { name, email, password } = req.body;
-//       const isEmailExist = await userModel.findOne({ email });
-//       if (isEmailExist) {
-//         return next(new ErrorHandler("Email already exist", 400));
-//       }
-
-//       const user: IRegistrationBody = {
-//         name,
-//         email,
-//         password,
-//       };
-
-//       const activationToken = createActivationToken(user);
-
-//       const activationCode = activationToken.activationCode;
-
-//       const data = { user: { name: user.name }, activationCode };
-//       const html = await ejs.renderFile(
-//         path.join(__dirname, "../mails/activation-mail.ejs"),
-//         data
-//       );
-
-//       // console.log(`html is `,html);
-//       console.log(`data is `,data);
-//       try {
-//        const d= await sendMail({
-//           email: user.email,
-//           subject: "Activate your account ",
-//           template: "activation-mail.ejs",
-//           text:"Hello",
-//           data,
-//         });
-
-//         res.status(201).json({
-//           success: true,
-//           message: `Please check your email : ${user.email} to activate your account!`,
-//           activationToken: activationToken.token,
-
-//         });
-//       } catch (error: any) {
-//         return next(new ErrorHandler(error.message, 400));
-//       }
-//     } catch (error: any) {
-//       return next(new ErrorHandler(error.message, 400));
-//     }
-//   }
-// );
 
 //test
 export const registrationUser = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { name, email, password, role } = req.body;
+      const { phone, email, password, role } = req.body;
 
+
+
+      console.log(`registration api hit `, req.body);
       // Check if email already exists
       const isEmailExist = await userModel.findOne({ email });
       if (isEmailExist) {
@@ -179,7 +50,7 @@ export const registrationUser = CatchAsyncError(
 
       // User data
       const user: IRegistrationBody = {
-        name,
+        phone,
         email,
         password,
         role,
@@ -190,7 +61,7 @@ export const registrationUser = CatchAsyncError(
       const activationCode = activationToken.activationCode;
 
       // Prepare email data
-      const data = { user: { name: user.name }, activationCode };
+      const data = { user: { name: "" }, activationCode };
 
       
 
@@ -277,7 +148,7 @@ export const activationUser = CatchAsyncError(
         return next(new ErrorHandler("Invalid activation code ", 400));
       }
 
-      const { name, email, password,role} = newUser.user;
+      const { phone, email, password,role} = newUser.user;
 
       const existUser = await userModel.findOne({ email });
 
@@ -286,7 +157,7 @@ export const activationUser = CatchAsyncError(
       }
 
       const user = await userModel.create({
-        name,
+        phone,
         email,
         password,
         role,
@@ -301,7 +172,6 @@ export const activationUser = CatchAsyncError(
     }
   }
 );
-
 
 
 //LOGIN USER
