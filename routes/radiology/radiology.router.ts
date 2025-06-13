@@ -62,6 +62,12 @@ RadiologyRoute.post(
 
 
 
-RadiologyRoute.post("/create-service",updateAccessToken,isAuthneticated,createRadiologyService)
+RadiologyRoute.post(
+  "/create-service",
+  updateAccessToken,
+  isAuthneticated,
+  upload.single("avatar"),
+  createRadiologyService
+);
 
 export default RadiologyRoute;

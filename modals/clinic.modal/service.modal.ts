@@ -2,26 +2,22 @@ import mongoose, { Document, Schema, Types } from "mongoose";
 
 //services interface
 
-export interface IReport {
-  reportsname: string[];
-  courierfee: number;
-  persornfee: number;
-}
-
-export interface IRadiologyServices {
+export interface IClinicServices {
   userId: mongoose.Types.ObjectId;
   category: string;
   serviceName: string;
-  description: string;
+  description?: string;
   mode: string[];
   homeServicePrice:number;
+  hybridServicePrice:number;
+  e_clinicServicePrice:number;
   fee: number;
   estimatedPrice?: number;
-  reports: IReport[];
-  image?: {
+
+  image?: [{
     url: string;
     public_id: string;
-  };
+  }];
 
   reviews?: IReview[];
   socialLink?: ISocialLink[];
@@ -54,28 +50,14 @@ export interface ISocialLink {
   url: string;
 }
 
-//IReport schema
 
-export const ReportSchema = new mongoose.Schema<IReport>({
-  reportsname: [
-    {
-      type: [String],
-    },
-  ],
-  courierfee: {
-    type: Number,
-  },
-  persornfee: {
-    type: Number,
-  },
-});
 
 //review Schema
 export const ReviewSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
-    refPath: "reviews.userType",
+    refPath: "User",
   },
   userType: { type: String, required: true, enum: ["Patient", "Doctor"] },
   rating: { type: Number, required: true, min: 1, max: 5 },
@@ -92,7 +74,7 @@ export const socialLinkSchema = new Schema<ISocialLink>(
   { _id: false }
 );
 
-const radiologyServiceSchema = new Schema<IRadiologyServices>(
+const clinicServiceSchema = new Schema<IClinicServices>(
   {
     userId: {
       type: Schema.Types.ObjectId,
@@ -114,14 +96,14 @@ const radiologyServiceSchema = new Schema<IRadiologyServices>(
     estimatedPrice: {
       type: Number,
     },
-    image: {
+    image: [{
       url: {
         type: String,
       },
       public_id: {
         type: String,
       },
-    },
+    }],
     mode: [
       {
         type: String,
@@ -130,12 +112,18 @@ const radiologyServiceSchema = new Schema<IRadiologyServices>(
     homeServicePrice: {
       type: Number,
     },
+    hybridServicePrice:{
+        type:Number,
 
+    },
+    e_clinicServicePrice:{
+        type:Number,
+    },
     description: {
       type: String,
       required: [true, "Please enter a something about servics"],
     },
-    reports: [ReportSchema],
+
     reviews: ReviewSchema,
     socialLink: socialLinkSchema,
     isAvailable: {
@@ -167,8 +155,8 @@ const radiologyServiceSchema = new Schema<IRadiologyServices>(
   { timestamps: true }
 );
 
-radiologyServiceSchema.index({ location: "2dsphere" });
-export const RadiologyService = mongoose.model<IRadiologyServices>(
-  "RadiologyService",
-  radiologyServiceSchema
+clinicServiceSchema.index({ location: "2dsphere" });
+export const ClinicService = mongoose.model<IClinicServices>(
+  "ClinicService",
+ clinicServiceSchema
 );

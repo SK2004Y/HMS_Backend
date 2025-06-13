@@ -4,7 +4,7 @@ import { streamUploadToCloudinary } from "../../utils/cloudinary";
 import { RadiologyService } from "../../modals/radiology.modal.ts/services.modal";
 import ErrorHandler from "../../utils/ErrorHandler";
 
-export const createRadiologyService = CatchAsyncError(
+export const createClinicService = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
 
@@ -12,20 +12,23 @@ export const createRadiologyService = CatchAsyncError(
           `Readiology services hitted ${JSON.stringify(req.body)}`,
           req.body
         );
+
+
         console.log(`request without json`,req.body);
 
-        const parsedReports = JSON.parse(req.body.reports);
-        req.body.reports = parsedReports;
+    
+
   
-      let avatarData = {
+
+
+      let imageData = {
         secure_url: "",
         public_id: "",
       };
 
-      if (req.file) {
-        avatarData = await streamUploadToCloudinary(req.file, "radiology-service");
-      }
+      
 
+      
 
       let location = {};
 
