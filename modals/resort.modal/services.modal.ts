@@ -4,14 +4,21 @@ import mongoose,{Document,Schema,Types} from "mongoose";
 
 export interface IResortServices{
     userId:mongoose.Types.ObjectId
+    category:string;
     serviceName:string;
-    fee:number;
+    price:number;
+    priceDays:number;
     estimatedPrice?:number;
-    image?:{
+    image?:[{
         url:string;
         public_id:string;
-    };
-    mode:string;
+    }];
+    video?:[
+      {
+        url:string,
+        public_id:string,
+      }
+    ];
     description:string;
     reviews?:IReview;
     socialLink?:[ISocialLink],
@@ -76,31 +83,43 @@ const resortServiceSchema = new Schema<IResortServices>(
       ref: "User",
       required: true,
     },
+    category:{
+      type:String,
+    },
     serviceName: {
       type: String,
       required: [true, "please enter a service name"],
     },
-    fee: {
+    price: {
       type: Number,
-      required: [true, "please enter a service price "],
+      
+    },
+    priceDays:{
+      type:Number,
     },
     estimatedPrice: {
       type: Number,
     },
-    image: {
+    image: [{
       url: {
         type: String,
       },
       public_id: {
         type: String,
       },
-    },
-    mode: {
-      type: String,
-    },
+    }],
+    video:[{
+      url:{
+        type:String,
+      },
+      public_id:{
+        type:String,
+      }
+    }],
+   
     description: {
       type: String,
-      required: [true, "Please enter a something about servics"],
+  
     },
     reviews: ReviewSchema,
     socialLink: socialLinkSchema,

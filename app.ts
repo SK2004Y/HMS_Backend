@@ -32,6 +32,7 @@ import AmbulanceRoute from './routes/ambulance/ambulance.route';
 import RadiologyRoute from './routes/radiology/radiology.router';
 import ResortRoute from './routes/resort/resort.route';
 import PatientRouter from './routes/patient/patient.router';
+import ClinicRoute from './routes/clinic/clinic.route';
 
 // import { reportRouter } from './routes/patient-report.router';
 
@@ -101,6 +102,7 @@ app.use("/api/vs/medicine",MedicineRoute);
 app.use("/api/vs/ambulance",AmbulanceRoute);
 app.use("/api/vs/radiology",RadiologyRoute);
 app.use("/api/vs/resort",ResortRoute);
+app.use("/api/vs/clinic",ClinicRoute)
 
 
 

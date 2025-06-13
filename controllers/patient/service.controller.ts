@@ -7,6 +7,7 @@ import { HospitalService } from "../../modals/hospital.modal/services.modal";
 import { ResortService } from "../../modals/resort.modal/services.modal";
 import { AmbulanceService } from "../../modals/ambulance.modal/services.modal";
 import { PharmacyService } from "../../modals/medicine.modal/services.modal";
+import { ClinicService } from "../../modals/clinic.modal/service.modal";
 import ErrorHandler from "../../utils/ErrorHandler";
 import express, {NextFunction,Request,Response}  from "express"
 import {redis} from "../../utils/redis"
@@ -85,13 +86,7 @@ export const AllDoctorServices = CatchAsyncError(
 );
 
 
-
-
-
 //all services controller 
-
-
-
 // Utility to build a $geoNear stage if coords are provided
 // const buildGeoNear = (lng: number, lat: number) => ({
 //   $geoNear: {
@@ -251,29 +246,27 @@ export const getAllServices = async (req: Request, res: Response) => {
     };
 
     // ✅ Parallel aggregation from all service models
-    const [
-      doctors,
-      ambulances,
-      diagnostics,
-      radiologies,
-      resorts,
-    ] = await Promise.all([
-      DoctorService.aggregate(buildPipeline(useGeo)).then((docs) =>
-        docs.map((doc) => ({ ...doc, serviceType: "doctor" }))
-      ),
-      AmbulanceService.aggregate(buildPipeline(useGeo)).then((docs) =>
-        docs.map((doc) => ({ ...doc, serviceType: "ambulance" }))
-      ),
-      DiagnosticService.aggregate(buildPipeline(useGeo)).then((docs) =>
-        docs.map((doc) => ({ ...doc, serviceType: "diagnostic" }))
-      ),
-      RadiologyService.aggregate(buildPipeline(useGeo)).then((docs) =>
-        docs.map((doc) => ({ ...doc, serviceType: "radiology" }))
-      ),
-      ResortService.aggregate(buildPipeline(useGeo)).then((docs) =>
-        docs.map((doc) => ({ ...doc, serviceType: "resort" }))
-      ),
-    ]);
+    const [doctors, ambulances, diagnostics, radiologies, resorts,clinic] =
+      await Promise.all([
+        DoctorService.aggregate(buildPipeline(useGeo)).then((docs) =>
+          docs.map((doc) => ({ ...doc, serviceType: "doctor" }))
+        ),
+        AmbulanceService.aggregate(buildPipeline(useGeo)).then((docs) =>
+          docs.map((doc) => ({ ...doc, serviceType: "ambulance" }))
+        ),
+        DiagnosticService.aggregate(buildPipeline(useGeo)).then((docs) =>
+          docs.map((doc) => ({ ...doc, serviceType: "diagnostic" }))
+        ),
+        RadiologyService.aggregate(buildPipeline(useGeo)).then((docs) =>
+          docs.map((doc) => ({ ...doc, serviceType: "radiology" }))
+        ),
+        ResortService.aggregate(buildPipeline(useGeo)).then((docs) =>
+          docs.map((doc) => ({ ...doc, serviceType: "resort" }))
+        ),
+        ClinicService.aggregate(buildPipeline(useGeo)).then((docs) =>
+          docs.map((doc) => ({ ...doc, serviceType: "clinic" }))
+        ),
+      ]);
 
     // ✅ Merge into one combined array
     const allServices = [
@@ -282,6 +275,7 @@ export const getAllServices = async (req: Request, res: Response) => {
       ...diagnostics,
       ...radiologies,
       ...resorts,
+      ...clinic,
     ];
 
     // ✅ Store in Redis cache with short TTL (e.g., 5 minutes)

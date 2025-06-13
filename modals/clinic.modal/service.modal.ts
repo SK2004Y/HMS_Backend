@@ -11,7 +11,7 @@ export interface IClinicServices {
   homeServicePrice:number;
   hybridServicePrice:number;
   e_clinicServicePrice:number;
-  fee: number;
+  onlineServicePrice: number;
   estimatedPrice?: number;
 
   image?: [{
@@ -89,9 +89,9 @@ const clinicServiceSchema = new Schema<IClinicServices>(
       type: String,
       required: [true, "please enter a service name"],
     },
-    fee: {
+    onlineServicePrice: {
       type: Number,
-      required: [true, "please enter a service price "],
+      
     },
     estimatedPrice: {
       type: Number,
@@ -121,7 +121,6 @@ const clinicServiceSchema = new Schema<IClinicServices>(
     },
     description: {
       type: String,
-      required: [true, "Please enter a something about servics"],
     },
 
     reviews: ReviewSchema,
@@ -149,7 +148,7 @@ const clinicServiceSchema = new Schema<IClinicServices>(
     },
     serviceType: {
       type: String,
-      default: "radiology",
+      default: "clinic",
     },
   },
   { timestamps: true }

@@ -3,7 +3,7 @@ import express, { Response, Request, NextFunction } from 'express'
 
 import { isAuthneticated, authorizeRoles } from '../../middleware/auth';
 
-const ResortRoute = express.Router();
+const ClinicRoute = express.Router();
 
 
 
@@ -23,25 +23,26 @@ import { upload } from "../../utils/multer"; // or configure for Cloudinary
 import { updateAccessToken } from "../../controllers/user.controller";
 import { handleProfile } from "../../utils/handler/handler.controller";
 import { createHospitalProfile } from '../../controllers/Hospital/profile.controller';
-import { createResortProfile } from '../../controllers/resort/profile.controller';
-import { createResortService } from '../../controllers/resort/service.controller';
+import { createRadiologyProfile } from '../../controllers/radiology/profile.controller';
+import { createRadiologyService } from '../../controllers/radiology/services.controller';
+import { createClinicService } from '../../controllers/clinic/service.controller';
 
 
 //all profileform handler 
-ResortRoute.get(
+ClinicRoute.get(
   "/check-profile",
   updateAccessToken,
   isAuthneticated,
   handleProfile
 );
-ResortRoute.post(
+ClinicRoute.post(
   "/create-profile",
   updateAccessToken,
   isAuthneticated,
-  authorizeRoles("resort"),
+  authorizeRoles("radiology"),
   upload.single("avatar"),
   // 👈 middleware to parse stringified JSON
-createResortProfile
+  createRadiologyProfile
 );
 
 
@@ -53,7 +54,21 @@ createResortProfile
 
 
 
-//services
-ResortRoute.post("/create-service",updateAccessToken,isAuthneticated,upload.any(),createResortService);
 
-export default ResortRoute;
+
+
+
+
+//service radiology || pathology
+
+
+
+ClinicRoute.post(
+  "/create-service",
+  updateAccessToken,
+  isAuthneticated,
+  upload.any(), // handles multiple image uploads under 'files' field
+  createClinicService
+);
+
+export default ClinicRoute;
