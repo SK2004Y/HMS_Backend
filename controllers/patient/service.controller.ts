@@ -202,6 +202,8 @@ export const getAllServices = async (req: Request, res: Response) => {
   try {
     const { lng, lat } = req.query;
 
+    console.log(`getAllservices data is $ called`)
+
     // ✅ Use Geo only if valid coordinates are provided
     const useGeo =
       typeof lng === "string" &&

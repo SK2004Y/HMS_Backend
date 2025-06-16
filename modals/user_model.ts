@@ -13,7 +13,7 @@ const emailRegexPattern: RegExp = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // User interface with OTP fields added
 export interface IUser extends Document {
-  name: string;
+  name?: string;
   phone: string;
   email?: string;
   password?: string;
@@ -39,7 +39,6 @@ const userSchema: Schema<IUser> = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: [false, "Please enter your name"],
     },
     phone: {
       type: String,

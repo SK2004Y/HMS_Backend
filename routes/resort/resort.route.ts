@@ -1,13 +1,8 @@
 import express, { Response, Request, NextFunction } from 'express'
 
-
 import { isAuthneticated, authorizeRoles } from '../../middleware/auth';
 
 const ResortRoute = express.Router();
-
-
-
-
 
 
 //create doctor profile 
@@ -24,7 +19,7 @@ import { updateAccessToken } from "../../controllers/user.controller";
 import { handleProfile } from "../../utils/handler/handler.controller";
 import { createHospitalProfile } from '../../controllers/Hospital/profile.controller';
 import { createResortProfile } from '../../controllers/resort/profile.controller';
-import { createResortService } from '../../controllers/resort/service.controller';
+import { createResortService, createTourService } from '../../controllers/resort/service.controller';
 
 
 //all profileform handler 
@@ -55,5 +50,36 @@ createResortProfile
 
 //services
 ResortRoute.post("/create-service",updateAccessToken,isAuthneticated,upload.any(),createResortService);
+
+
+
+
+
+
+
+
+
+
+
+
+//tour servivces 
+
+ResortRoute.post("/tour/create-service",updateAccessToken,createTourService);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 export default ResortRoute;

@@ -65,6 +65,7 @@ app.use(
     // origin:process.env.ORIGIN
     //fronted part running port url
     origin: [
+      "https://www.uronhealth.in",
       "http://localhost:3000",
       "http://192.168.31.252:3000",
       "http://192.168.31.253:3000",

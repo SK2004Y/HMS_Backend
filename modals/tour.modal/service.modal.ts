@@ -101,3 +101,6 @@ const TourServiceSchema = new mongoose.Schema<ITourService>({
   ],
   createdAt: { type: Date, default: Date.now },
 });
+
+
+export const TourService=mongoose.model<ITourService>("TourService",TourServiceSchema)
