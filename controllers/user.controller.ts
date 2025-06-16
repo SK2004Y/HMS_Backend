@@ -148,6 +148,7 @@ export const registrationUser = CatchAsyncError(
         const smsText = `Your OTP to activate your account is ${activationCode}. Do not share it.`;
        const responsesms= await sendSMS(phone, smsText);
        console.log(`response ${responsesms}and phone ${phone} and ${activationCode}`,responsesms)
+       next();
       } catch (err) {
         console.error("SMS Error:", err);
         return next(new ErrorHandler("Failed to send SMS", 500));
