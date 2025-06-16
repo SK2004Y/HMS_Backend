@@ -143,6 +143,8 @@ export const registrationUser = CatchAsyncError(
         return next(new ErrorHandler("Failed to send activation email", 500));
       }
 
+
+      
       // 4. Send Activation SMS
       try {
         const smsText = `Your OTP to activate your account is ${activationCode}. Do not share it.`;
@@ -151,7 +153,7 @@ export const registrationUser = CatchAsyncError(
        next();
       } catch (err) {
         console.error("SMS Error:", err);
-        return next(new ErrorHandler("Failed to send SMS", 500));
+        
       }
 
       // 5. Success Response
