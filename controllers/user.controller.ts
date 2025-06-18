@@ -146,15 +146,15 @@ export const registrationUser = CatchAsyncError(
 
       
       // 4. Send Activation SMS
-      try {
-        const smsText = `Your OTP to activate your account is ${activationCode}. Do not share it.`;
-       const responsesms= await sendSMS(phone, smsText);
-       console.log(`response ${responsesms}and phone ${phone} and ${activationCode}`,responsesms)
-       next();
-      } catch (err) {
-        console.error("SMS Error:", err);
+      // try {
+      //   const smsText = `Your OTP to activate your account is ${activationCode}. Do not share it.`;
+      //  const responsesms= await sendSMS(phone, smsText);
+      //  console.log(`response ${responsesms}and phone ${phone} and ${activationCode}`,responsesms)
+      //  next();
+      // } catch (err) {
+      //   console.error("SMS Error:", err);
         
-      }
+      // }
 
       // 5. Success Response
       res.status(201).json({
@@ -320,63 +320,164 @@ export const logoutUser = CatchAsyncError(
 
 //update access token
 
+// export const updateAccessToken = CatchAsyncError(
+//   async (req: Request, res: Response, next: NextFunction) => {
+//     try {
+//       const refresh_token = req.cookies.refresh_token as string;
+//       const decoded = jwt.verify(
+//         refresh_token,
+//         process.env.REFRESH_TOKEN as string
+//       ) as JwtPayload;
+
+//       const message = "Could not refresh token ";
+//       if (!decoded) {
+//         return next(new ErrorHandler(message, 400));
+//       }
+//       const session = await redis.get(decoded.id as string);
+
+//       if (!session) {
+//         return next(
+//           new ErrorHandler("Please login for access this resources!", 400)
+//         );
+//       }
+
+//       const user = JSON.parse(session);
+
+//       const accessToken = jwt.sign(
+//         { id: user._id },
+//         process.env.ACCESS_TOKEN as string,
+//         {
+//           expiresIn: "15m",
+//         }
+//       );
+
+//       const refreshToken = jwt.sign(
+//         { id: user._id },
+//         process.env.REFRESH_TOKEN as string,
+//         {
+//           expiresIn: "10d",
+//         }
+//       );
+
+//       req.user = user;
+
+//       res.cookie("access_token", accessToken, accessTokenOptions);
+
+//       res.cookie("refresh_token", refreshToken, refreshTokenOptions);
+
+//       await redis.set(user._id, JSON.stringify(user), "EX", 604800); //7 days for 604800
+
+//       // res.status(200).json({
+//       //   status: "success",
+//       //   accessToken,
+//       // });
+      
+//       next();
+//     } catch (error: any) {
+//       console.log(`updated accesstoken error `,error.message)
+//       return next(new ErrorHandler(error.message, 400));
+//     }
+//   }
+// );
+
+
+
+
+// updateAccessToken.ts
+
 export const updateAccessToken = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
+      // 🔍 Get refresh token from cookies
       const refresh_token = req.cookies.refresh_token as string;
-      const decoded = jwt.verify(
-        refresh_token,
-        process.env.REFRESH_TOKEN as string
-      ) as JwtPayload;
 
-      const message = "Could not refresh token ";
-      if (!decoded) {
-        return next(new ErrorHandler(message, 400));
+      if (!refresh_token) {
+        return next(new ErrorHandler("Refresh token not found in cookies", 400));
       }
-      const session = await redis.get(decoded.id as string);
 
+      // 🔐 Verify refresh token
+      let decoded: JwtPayload;
+      try {
+        decoded = jwt.verify(
+          refresh_token,
+          process.env.REFRESH_TOKEN as string
+        ) as JwtPayload;
+      } catch (err) {
+        return next(new ErrorHandler("Invalid or expired refresh token", 401));
+      }
+
+      // ⚠️ If somehow decoding fails
+      if (!decoded || !decoded.id) {
+        return next(new ErrorHandler("Could not refresh token", 400));
+      }
+
+      // 🧠 Check Redis session
+      const session = await redis.get(decoded.id as string);
       if (!session) {
         return next(
-          new ErrorHandler("Please login for access this resources!", 400)
+          new ErrorHandler("Session expired. Please log in again", 401)
         );
       }
 
       const user = JSON.parse(session);
 
+      // ✅ Generate new access and refresh tokens
       const accessToken = jwt.sign(
         { id: user._id },
         process.env.ACCESS_TOKEN as string,
-        {
-          expiresIn: "15m",
-        }
+        { expiresIn: "15m" }
       );
 
-      const refreshToken = jwt.sign(
+      const newRefreshToken = jwt.sign(
         { id: user._id },
         process.env.REFRESH_TOKEN as string,
-        {
-          expiresIn: "10d",
-        }
+        { expiresIn: "10d" }
       );
 
+      // 📌 Store user on req for later use
       req.user = user;
 
+      // 🍪 Set cookies
       res.cookie("access_token", accessToken, accessTokenOptions);
+      res.cookie("refresh_token", newRefreshToken, refreshTokenOptions);
 
-      res.cookie("refresh_token", refreshToken, refreshTokenOptions);
+      // 💾 Update Redis session (valid for 7 days)
+      await redis.set(user._id, JSON.stringify(user), "EX", 7 * 24 * 60 * 60); // 604800
 
-      await redis.set(user._id, JSON.stringify(user), "EX", 604800); //7 days for 604800
-
-      // res.status(200).json({
-      //   status: "success",
-      //   accessToken,
-      // });
+      // 🚀 Continue to next middleware or controller
       next();
     } catch (error: any) {
-      return next(new ErrorHandler(error.message, 400));
+      console.log(`❌ updateAccessToken error:`, error.message);
+      return next(new ErrorHandler("Failed to refresh token", 400));
     }
   }
 );
+
+
+//cookieOptions
+
+// cookieOptions.ts
+
+ const accessTokenOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production", // 🔐 important for production
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+  maxAge: 15 * 60 * 1000, // 15 mins
+};
+
+ const refreshTokenOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+  maxAge: 10 * 24 * 60 * 60 * 1000, // 10 days
+};
+
+
+
+
+
+
+
 
 // get user info
 

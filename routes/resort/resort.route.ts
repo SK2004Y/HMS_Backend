@@ -40,14 +40,6 @@ createResortProfile
 );
 
 
-
-
-
-
-
-
-
-
 //services
 ResortRoute.post("/create-service",updateAccessToken,isAuthneticated,upload.any(),createResortService);
 
