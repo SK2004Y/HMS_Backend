@@ -3,7 +3,6 @@ import { CatchAsyncError } from "../../middleware/catchAsyncErrors";
 import { streamUploadMultipleToCloudinary } from "../../utils/cloudinary";
 import { ResortService } from "../../modals/resort.modal/services.modal";
 import ErrorHandler from "../../utils/ErrorHandler";
-import { TourService } from "../../modals/tour.modal/service.modal";
 
 // Create Resort Service Controller
 export const createResortService = CatchAsyncError(
@@ -18,7 +17,7 @@ export const createResortService = CatchAsyncError(
         folder
       );
 
-      // Handle images (default empty if none provided)
+      // Prepare image data
       let imageData = { url: "", public_id: "" };
       if (images?.length > 0) {
         imageData = {
@@ -27,7 +26,7 @@ export const createResortService = CatchAsyncError(
         };
       }
 
-      // Handle videos (default empty if none provided)
+      // Prepare video data
       let videoData = { url: "", public_id: "" };
       if (videos?.length > 0) {
         videoData = {
@@ -36,8 +35,8 @@ export const createResortService = CatchAsyncError(
         };
       }
 
-      // Handle optional location parsing
-      let location = undefined;
+      // Parse location if provided
+      let location: any = undefined;
       if (req.body.location) {
         try {
           const parsed = JSON.parse(req.body.location);
@@ -45,7 +44,6 @@ export const createResortService = CatchAsyncError(
           const lon = parseFloat(parsed.coordinates?.[0]);
           const lat = parseFloat(parsed.coordinates?.[1]);
 
-          // Only set if valid numbers
           if (!isNaN(lon) && !isNaN(lat)) {
             location = {
               type: "Point",
@@ -55,26 +53,29 @@ export const createResortService = CatchAsyncError(
               pincode: parsed.pincode || "",
               landmark: parsed.landmark || "",
             };
+          } else {
+            console.warn("Invalid longitude/latitude. Skipping location.");
           }
         } catch (err) {
           return res.status(400).json({
             success: false,
-            message: "Invalid location format (must be JSON with coordinates).",
+            message:
+              "Invalid location format. Must be JSON with valid coordinates.",
           });
         }
       }
 
       console.log("Received resort service data:", req.body);
 
-      // Build the final document to store
+      // Construct the final payload safely
       const parsedBody = {
         ...req.body,
-        location, // either valid object or undefined
+        ...(location && { location }), // include only if valid
         image: imageData,
         video: videoData,
       };
 
-      // Create and save the ResortService document
+      // Save to DB
       const resortService = new ResortService(parsedBody);
       await resortService.save();
 
@@ -89,17 +90,9 @@ export const createResortService = CatchAsyncError(
   }
 );
 
-
-
-
-
 //tour operator services
 
 // Create Resort Service Controller
-import { Request, Response, NextFunction } from "express";
-import { CatchAsyncError } from "../../middleware/catchAsyncErrors";
-import { TourService } from "../../modals/resort.modal/service.modal";
-import ErrorHandler from "../../utils/ErrorHandler";
 
 export const createTourService = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
