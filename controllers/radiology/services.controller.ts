@@ -1,4 +1,4 @@
-import express, {NextFunction,Request,Response} from "express"
+import express, { NextFunction, Request, Response } from "express";
 import { CatchAsyncError } from "../../middleware/catchAsyncErrors";
 import { streamUploadToCloudinary } from "../../utils/cloudinary";
 import { RadiologyService } from "../../modals/radiology.modal.ts/services.modal";
@@ -7,39 +7,50 @@ import ErrorHandler from "../../utils/ErrorHandler";
 export const createRadiologyService = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
+      console.log(`Radiology services hit with:`, req.body);
 
-        console.log(
-          `Readiology services hitted ${JSON.stringify(req.body)}`,
-          req.body
-        );
-        console.log(`request without json`,req.body);
+      const parsedReports = JSON.parse(req.body.reports);
+      req.body.reports = parsedReports;
 
-        const parsedReports = JSON.parse(req.body.reports);
-        req.body.reports = parsedReports;
-  
       let avatarData = {
         secure_url: "",
         public_id: "",
       };
 
       if (req.file) {
-        avatarData = await streamUploadToCloudinary(req.file, "radiology-service");
+        avatarData = await streamUploadToCloudinary(
+          req.file,
+          "radiology-service"
+        );
       }
 
+      // ✅ Parse and validate location
+      let location;
+      try {
+        const parsedLocation = JSON.parse(req.body.location || "{}");
 
-      let location = {};
+        const longitude = parseFloat(parsedLocation.coordinates?.[0]);
+        const latitude = parseFloat(parsedLocation.coordinates?.[1]);
 
-    //   try {
-    //     location = JSON.parse(req.body.location);
-    //   } catch (err) {
-    //     return res
-    //       .status(400)
-    //       .json({ success: false, message: "Invalid location data" });
-    //   }
+        const isValidCoordinates =
+          !isNaN(longitude) &&
+          !isNaN(latitude) &&
+          Math.abs(latitude) <= 90 &&
+          Math.abs(longitude) <= 180;
 
-    if(location){
-      location=JSON.parse(req.body.location);
-    }
+        location = {
+          type: "Point",
+          coordinates: isValidCoordinates ? [longitude, latitude] : [0, 0],
+          city: parsedLocation.city || "",
+          state: parsedLocation.state || "",
+          pincode: parsedLocation.pincode || "",
+          landmark: parsedLocation.landmark || "",
+        };
+      } catch (err) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Invalid location format" });
+      }
 
       const parsedBody = {
         ...req.body,
@@ -62,9 +73,9 @@ export const createRadiologyService = CatchAsyncError(
         message: "Service created successfully",
       });
     } catch (error: any) {
-      return next(new ErrorHandler(error.message, 400));
+      return next(
+        new ErrorHandler(error.message || "Service creation failed", 400)
+      );
     }
   }
 );
-
-
