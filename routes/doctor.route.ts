@@ -158,6 +158,8 @@ doctorRoute.get('/d-searchDoctors', searchDoctors);
 //doctor toogle (means available or not )
 doctorRoute.patch('/d-toogle-profile/:id', toggleAvailability);
 
+
+
 doctorRoute.patch(
   "/admin/approve-doctor/:id",
   isAuthneticated,

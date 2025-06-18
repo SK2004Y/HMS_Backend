@@ -5,48 +5,6 @@ import cloudinary, { streamUploadToCloudinary } from "../../utils/cloudinary";
 
 import ErrorHandler from "../../utils/ErrorHandler";
 import { DoctorService } from "../../modals/doctor.modal/services.modal";
-// export const createDoctorService = CatchAsyncError(
-//   async (req: Request, res: Response, next: NextFunction) => {
-//     try {
-//       console.log("API hit: CreatedServices");
-//       console.log("Request Body:", req.body);
-//       console.log("File:", req.file);
-//       let avatarData = {
-//         secure_url: "",
-//         public_id: "",
-//       };
-
-//       if (req.file) {
-//         avatarData = await streamUploadToCloudinary(req.file, "doctor-service");
-//       }
-
-//       const parsedBody = {
-//         ...req.body,
-//       };
-
-//       const doctor = new DoctorService({
-//         ...parsedBody,
-//         avatar: {
-//           url: avatarData.secure_url,
-//           public_id: avatarData.public_id,
-//         },
-//       });
-
-//       await doctor.save();
-
-//       res.status(201).json({
-//         success: true,
-//         doctor,
-//         message: "Services Created  successfully",
-//       });
-//     } catch (error: any) {
-//       return next(new ErrorHandler(error.message, 400));
-//     }
-//   }
-// );
-
-
-
 
 
 // CREATE
@@ -262,42 +220,50 @@ export const getDoctorServiceStats = CatchAsyncError(
 );
 
 
-
-
-
-
-
 // PATCH /api/services/:id/toggle
+
 export const toggleDoctorServiceField = CatchAsyncError(
   async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const { field, value } = req.body;
-    console.log(`fiedls are `,field,value)
+    try {
+      const { id } = req.params;
+      const { field, value } = req.body;
 
-    if (!["isAvailable", "lead"].includes(field)) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid toggle field." });
+      console.log(`toogle services received `, req.body);
+      console.log(`params: `, id);
+
+      if (!["isAvailable", "lead"].includes(field)) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Invalid toggle field." });
+      }
+
+      // Use findByIdAndUpdate for reliability
+      const updatedService = await DoctorService.findByIdAndUpdate(
+        id,
+        { [field]: value },
+        { new: true } // return updated document
+      );
+
+      if (!updatedService) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Service not found." });
+      }
+
+      res.status(200).json({
+        success: true,
+        message: `${field} updated successfully.`,
+        service: updatedService,
+      });
+    } catch (error: any) {
+      console.error("Toggle service error:", error);
+      res
+        .status(500)
+        .json({
+          success: false,
+          message: "Server error",
+          error: error.message,
+        });
     }
-
-
-    
-    const service = await DoctorService.findById(id);
-    if (!service) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Service not found." });
-    }
-
-    (service as any)[field] = value; // dynamically update field
-    await service.save();
-
-    res.status(200).json({
-      success: true,
-      message: `${field} updated successfully.`,
-      service,
-    });
   }
 );
-
-
