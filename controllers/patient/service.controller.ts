@@ -86,100 +86,6 @@ export const AllDoctorServices = CatchAsyncError(
 );
 
 
-//all services controller 
-// Utility to build a $geoNear stage if coords are provided
-// const buildGeoNear = (lng: number, lat: number) => ({
-//   $geoNear: {
-//     near: { type: "Point", coordinates: [lng, lat] },
-//     distanceField: "distance",
-//     spherical: true,
-//     query: { isActive: true }, // Only include active services
-//   },
-// });
-
-// // Controller: fetch top 18 services per role, sorted by rating (and distance if geo)
-// export const getAllServices = async (req: Request, res: Response) => {
-//   try {
-//     const { lng, lat } = req.query;
-
-//     // Determine if valid coordinates were passed
-//     const useGeo =
-//       typeof lng === "string" &&
-//       typeof lat === "string" &&
-//       !isNaN(Number(lng)) &&
-//       !isNaN(Number(lat));
-//     const longitude = Number(lng);
-//     const latitude = Number(lat);
-
-//     // Build the shared pipeline for each role
-//     const buildPipeline = (withGeo: boolean) => {
-//       const pipeline: any[] = [];
-
-//       // 1) Optional: geo-distance sort if we have coords
-//       if (withGeo) {
-//         pipeline.push(buildGeoNear(longitude, latitude));
-//       } else {
-//         // Otherwise, just filter to active services
-//         pipeline.push({ $match: { isAvailable: true } });
-//       }
-
-//       // 2) Sort by rating descending (highest rated first)
-//       // pipeline.push({ $sort: { rating: -1 } });
-
-//       // 3) Limit to top 18 for this role
-//       pipeline.push({ $limit: 18 });
-
-//       return pipeline;
-//     };
-
-//     // Run all five aggregations in parallel, tagging each result
-//     const [
-//       doctors,
-//       ambulances,
-//       diagnostics,
-//       radiologies,
-//       resorts,
-//     ] = await Promise.all([
-//       DoctorService.aggregate(buildPipeline(useGeo)).then((docs) =>
-//         docs.map((doc) => ({ ...doc, serviceType: "doctor" }))
-//       ),
-//       AmbulanceService.aggregate(buildPipeline(useGeo)).then((docs) =>
-//         docs.map((doc) => ({ ...doc, serviceType: "ambulance" }))
-//       ),
-//       DiagnosticService.aggregate(buildPipeline(useGeo)).then((docs) =>
-//         docs.map((doc) => ({ ...doc, serviceType: "diagnostic" }))
-//       ),
-//       RadiologyService.aggregate(buildPipeline(useGeo)).then((docs) =>
-//         docs.map((doc) => ({ ...doc, serviceType: "radiology" }))
-//       ),
-//       ResortService.aggregate(buildPipeline(useGeo)).then((docs) =>
-//         docs.map((doc) => ({ ...doc, serviceType: "resort" }))
-//       ),
-//     ]);
-
-//     // Merge all five arrays into one
-//     const allServices = [
-//       ...doctors,
-//       ...ambulances,
-//       ...diagnostics,
-//       ...radiologies,
-//       ...resorts,
-//     ];
-
-//     // Return combined result
-//     return res.status(200).json({
-//       success: true,
-//       total: allServices.length,
-//       services: allServices,
-//     });
-//   } catch (err) {
-//     console.error("Error in getAllServices controller:", err);
-//     return res.status(500).json({
-//       success: false,
-//       message: "Internal server error while fetching services",
-//     });
-//   }
-// };
 
 
 
@@ -302,6 +208,9 @@ export const getAllServices = async (req: Request, res: Response) => {
     });
   }
 };
+
+
+
 
 
 
@@ -885,6 +794,209 @@ export async function searchServices(
     pipeline.push({ $limit: 20 });
 
     const results = await DoctorService.aggregate(pipeline);
+    return res.status(200).json({ data: results });
+  } catch (error: any) {
+    console.error("Search Services Error:", error);
+    return next(new ErrorHandler(error.message, 400));
+  }
+}
+
+
+
+export async function searchServicesRadiology(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const { q, lat, lng } = req.query;
+
+    console.log(`hitted searchServices with readiology query:`, req.query);
+    const searchTerm = typeof q === "string" && q.trim() ? q.trim() : null;
+    const latNum = lat ? Number(lat) : null;
+    const lngNum = lng ? Number(lng) : null;
+
+    const pipeline: any[] = [];
+
+    // If we have valid coordinates, add geoNear stage
+    const hasGeo =
+      latNum != null && lngNum != null && !isNaN(latNum) && !isNaN(lngNum);
+    if (hasGeo) {
+      pipeline.push({
+        $geoNear: {
+          near: { type: "Point", coordinates: [lngNum, latNum] },
+          distanceField: "distance",
+          spherical: true,
+        },
+      });
+    }
+
+    // Always filter available services
+    pipeline.push({ $match: { isAvailable: true } });
+
+    // Text search filter
+    if (searchTerm) {
+      pipeline.push({
+        $match: {
+          $or: [
+            { serviceName: { $regex: searchTerm, $options: "i" } },
+            { category: { $regex: searchTerm, $options: "i" } },
+            {description:{$regex:searchTerm,$options:"i"}},
+          ],
+        },
+      });
+    }
+
+    // If geo search, compute distance in km and sort by proximity
+    if (hasGeo) {
+      pipeline.push({
+        $addFields: {
+          distanceInKm: { $round: [{ $divide: ["$distance", 1000] }, 2] },
+        },
+      });
+      pipeline.push({ $sort: { distance: 1 } });
+    }
+
+    // Limit results
+    pipeline.push({ $limit: 20 });
+
+    const results = await RadiologyService.aggregate(pipeline);
+    return res.status(200).json({ data: results });
+  } catch (error: any) {
+    console.error("Search Services Error:", error);
+    return next(new ErrorHandler(error.message, 400));
+  }
+}
+
+
+
+//resort services 
+export async function searchServicesResort(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const { q, lat, lng } = req.query;
+
+    console.log(`hitted searchServices with query:`, req.query);
+    const searchTerm = typeof q === "string" && q.trim() ? q.trim() : null;
+    const latNum = lat ? Number(lat) : null;
+    const lngNum = lng ? Number(lng) : null;
+
+    const pipeline: any[] = [];
+
+    // If we have valid coordinates, add geoNear stage
+    const hasGeo =
+      latNum != null && lngNum != null && !isNaN(latNum) && !isNaN(lngNum);
+    if (hasGeo) {
+      pipeline.push({
+        $geoNear: {
+          near: { type: "Point", coordinates: [lngNum, latNum] },
+          distanceField: "distance",
+          spherical: true,
+        },
+      });
+    }
+
+    // Always filter available services
+    pipeline.push({ $match: { isAvailable: true } });
+
+    // Text search filter
+    if (searchTerm) {
+      pipeline.push({
+        $match: {
+          $or: [
+            { serviceName: { $regex: searchTerm, $options: "i" } },
+            { category: { $regex: searchTerm, $options: "i" } },
+            { description: { $regex: searchTerm, $options: "i" } },
+          ],
+        },
+      });
+    }
+
+    // If geo search, compute distance in km and sort by proximity
+    if (hasGeo) {
+      pipeline.push({
+        $addFields: {
+          distanceInKm: { $round: [{ $divide: ["$distance", 1000] }, 2] },
+        },
+      });
+      pipeline.push({ $sort: { distance: 1 } });
+    }
+
+    // Limit results
+    pipeline.push({ $limit: 20 });
+
+    const results = await ResortService.aggregate(pipeline);
+    return res.status(200).json({ data: results });
+  } catch (error: any) {
+    console.error("Search Services Error:", error);
+    return next(new ErrorHandler(error.message, 400));
+  }
+}
+
+
+//searchServicesClinic
+
+export async function searchServicesClinic(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const { q, lat, lng } = req.query;
+
+    console.log(`hitted searchServices with query:`, req.query);
+    const searchTerm = typeof q === "string" && q.trim() ? q.trim() : null;
+    const latNum = lat ? Number(lat) : null;
+    const lngNum = lng ? Number(lng) : null;
+
+    const pipeline: any[] = [];
+
+    // If we have valid coordinates, add geoNear stage
+    const hasGeo =
+      latNum != null && lngNum != null && !isNaN(latNum) && !isNaN(lngNum);
+    if (hasGeo) {
+      pipeline.push({
+        $geoNear: {
+          near: { type: "Point", coordinates: [lngNum, latNum] },
+          distanceField: "distance",
+          spherical: true,
+        },
+      });
+    }
+
+    // Always filter available services
+    pipeline.push({ $match: { isAvailable: true } });
+
+    // Text search filter
+    if (searchTerm) {
+      pipeline.push({
+        $match: {
+          $or: [
+            { serviceName: { $regex: searchTerm, $options: "i" } },
+            { category: { $regex: searchTerm, $options: "i" } },
+            { description: { $regex: searchTerm, $options: "i" } },
+          ],
+        },
+      });
+    }
+
+    // If geo search, compute distance in km and sort by proximity
+    if (hasGeo) {
+      pipeline.push({
+        $addFields: {
+          distanceInKm: { $round: [{ $divide: ["$distance", 1000] }, 2] },
+        },
+      });
+      pipeline.push({ $sort: { distance: 1 } });
+    }
+
+    // Limit results
+    pipeline.push({ $limit: 20 });
+
+    const results = await ResortService.aggregate(pipeline);
     return res.status(200).json({ data: results });
   } catch (error: any) {
     console.error("Search Services Error:", error);

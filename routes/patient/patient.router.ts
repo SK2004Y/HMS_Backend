@@ -2,7 +2,7 @@ import express, {Request,Response} from "express"
 import { Router } from "express"
 import { isAuthneticated } from "../../middleware/auth"
 import { updateAccessToken } from "../../controllers/user.controller"
-import { AllDiagnosticServices, AllDoctorServices, AllGymervices, AllHospitalServices, AllPharmacyServices, AllRadiologyServices, AllResortervices, DoctorallServices, DoctorallServicess, getAllServices, searchServices, SingleDiagnosticService, SingleDoctorService, SingleGymService, SingleHospitalService, SinglePharmacyService, SingleRadiologyService, SingleResortService } from "../../controllers/patient/service.controller"
+import { AllDiagnosticServices, AllDoctorServices, AllGymervices, AllHospitalServices, AllPharmacyServices, AllRadiologyServices, AllResortervices, DoctorallServices, DoctorallServicess, getAllServices, searchServices, searchServicesClinic, searchServicesRadiology, searchServicesResort, SingleDiagnosticService, SingleDoctorService, SingleGymService, SingleHospitalService, SinglePharmacyService, SingleRadiologyService, SingleResortService } from "../../controllers/patient/service.controller"
 import { get } from "http"
 
 import { NotificationModel } from "../../modals/notifications/notification.modal"
@@ -20,6 +20,24 @@ PatientRouter.get("/doctorServices/page",getAllServices);
 
 PatientRouter.get("/Services/pages", DoctorallServices);
 PatientRouter.get("/doctorService/p", searchServices);
+
+
+//radiology services 
+PatientRouter.get("/radiologyServices/p",searchServicesRadiology);
+
+
+
+
+PatientRouter.get("/resortServices/p",searchServicesResort);
+
+
+//clinic 
+PatientRouter.get("/clinicServices/p",searchServicesClinic);
+
+
+
+
+
 PatientRouter.get("/doctorService/:id",SingleDoctorService);
 
 
