@@ -21,7 +21,7 @@ export const createResortService = CatchAsyncError(
       let imageData = { url: "", public_id: "" };
       if (images?.length > 0) {
         imageData = {
-          url: images[0].secure_url,
+          url: images[0].url,
           public_id: images[0].public_id,
         };
       }
@@ -30,7 +30,7 @@ export const createResortService = CatchAsyncError(
       let videoData = { url: "", public_id: "" };
       if (videos?.length > 0) {
         videoData = {
-          url: videos[0].secure_url,
+          url: videos[0].url,
           public_id: videos[0].public_id,
         };
       }

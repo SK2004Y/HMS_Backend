@@ -41,22 +41,18 @@ createResortProfile
 
 
 //services
-ResortRoute.post("/create-service",updateAccessToken,isAuthneticated,upload.any(),createResortService);
+ResortRoute.post("/create-service",upload.any(),createResortService);
 
 
+// updateAccessToken,
+  // isAuthneticated,
+  //tour servivces
 
-
-
-
-
-
-
-
-
-
-//tour servivces 
-
-ResortRoute.post("/tour/create-service",updateAccessToken,createTourService);
+  ResortRoute.post(
+    "/tour/create-service",
+    updateAccessToken,
+    createTourService
+  );
 
 
 

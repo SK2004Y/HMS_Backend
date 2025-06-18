@@ -45,10 +45,10 @@ export const createClinicService = CatchAsyncError(
       const { images } = await streamUploadMultipleToCloudinary(files, folder);
 
       // ✅ You likely uploaded multiple images, so check if it's an array
-      let imageData = { secure_url: "", public_id: "" };
+      let imageData = { url: "", public_id: "" };
       if (images.length > 0) {
         imageData = {
-          secure_url: images[0].secure_url, // take the first one (if only one expected)
+          url: images[0].url, // take the first one (if only one expected)
           public_id: images[0].public_id,
         };
       }
