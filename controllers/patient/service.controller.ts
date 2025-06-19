@@ -809,20 +809,31 @@ export async function searchServicesRadiology(
   next: NextFunction
 ) {
   try {
-    const { q, lat, lng } = req.query;
+    // 1️⃣ Extract query parameters from request
+    const { q, lat, lng, page = "1", limit = "16" } = req.query;
 
-    console.log(`hitted searchServices with readiology query:`, req.query);
+    // const searchTerm = typeof q === "string" && q.trim() ? q.trim() : null;
+  
+ 
+    
+
+    console.log("▶️ Hit searchServicesRadiology with query:", req.query);
+
+    // 2️⃣ Convert and sanitize inputs
     const searchTerm = typeof q === "string" && q.trim() ? q.trim() : null;
     const latNum = lat ? Number(lat) : null;
     const lngNum = lng ? Number(lng) : null;
-
-    const pipeline: any[] = [];
-
-    // If we have valid coordinates, add geoNear stage
+    const pageNum = Math.max(Number(page), 1); // Ensure page is at least 1
+    const limitNum = Math.max(Number(limit), 1); // Ensure limit is at least 1
+    const skip = (pageNum - 1) * limitNum;
     const hasGeo =
       latNum != null && lngNum != null && !isNaN(latNum) && !isNaN(lngNum);
+    // 3️⃣ Build MongoDB aggregation pipeline
+    const basePipeline: any[] = [];
+
+    // Build basePipeline
     if (hasGeo) {
-      pipeline.push({
+      basePipeline.push({
         $geoNear: {
           near: { type: "Point", coordinates: [lngNum, latNum] },
           distanceField: "distance",
@@ -831,42 +842,60 @@ export async function searchServicesRadiology(
       });
     }
 
-    // Always filter available services
-    pipeline.push({ $match: { isAvailable: true } });
+    basePipeline.push({ $match: { isAvailable: true } });
 
-    // Text search filter
     if (searchTerm) {
-      pipeline.push({
+      basePipeline.push({
         $match: {
           $or: [
             { serviceName: { $regex: searchTerm, $options: "i" } },
             { category: { $regex: searchTerm, $options: "i" } },
-            {description:{$regex:searchTerm,$options:"i"}},
+            { description: { $regex: searchTerm, $options: "i" } },
           ],
         },
       });
     }
 
-    // If geo search, compute distance in km and sort by proximity
     if (hasGeo) {
-      pipeline.push({
+      basePipeline.push({
         $addFields: {
           distanceInKm: { $round: [{ $divide: ["$distance", 1000] }, 2] },
         },
       });
-      pipeline.push({ $sort: { distance: 1 } });
+      basePipeline.push({ $sort: { distance: 1 } });
     }
 
-    // Limit results
-    pipeline.push({ $limit: 20 });
+    // 1️⃣ Count
+    const countPipeline = [...basePipeline, { $count: "total" }];
+    const countResult = await RadiologyService.aggregate(countPipeline);
+    const total = countResult[0]?.total || 0;
+    const totalPages = Math.ceil(total / limitNum);
 
-    const results = await RadiologyService.aggregate(pipeline);
-    return res.status(200).json({ data: results });
+    // 2️⃣ Fetch paginated data
+    const paginatedPipeline = [
+      ...basePipeline,
+      { $skip: skip },
+      { $limit: limitNum },
+    ];
+
+    const results = await RadiologyService.aggregate(paginatedPipeline);
+    console.log("🚀 Total Count:", total);
+    console.log("📦 Services Returned:", results.length);
+    console.log("🧾 Current Page:", pageNum, "| Total Pages:", totalPages);
+
+    // ✅ Respond with data and pagination metadata
+    return res.status(200).json({
+      services: results,
+      total,
+      totalPages,
+      page: pageNum,
+    });
   } catch (error: any) {
-    console.error("Search Services Error:", error);
+    console.error("❌ Search Services Error:", error);
     return next(new ErrorHandler(error.message, 400));
   }
 }
+
 
 
 
