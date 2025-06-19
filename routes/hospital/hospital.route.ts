@@ -17,12 +17,13 @@ const HospitalRoute = express.Router();
 
 // import multer from "multer";
 import { parseFormData } from '../../middleware/formPaser';
-import { updateMedicineShop } from "../../controllers/medicineShop.controller";
+
 import { createAppointment } from "../../controllers/chats/appointment.controller";
 import { upload } from "../../utils/multer"; // or configure for Cloudinary
 import { updateAccessToken } from "../../controllers/user.controller";
 import { handleProfile } from "../../utils/handler/handler.controller";
 import { createHospitalProfile } from '../../controllers/Hospital/profile.controller';
+import { createHospitalService } from '../../controllers/Hospital/services.controller';
 
 
 //all profileform handler 
@@ -36,6 +37,16 @@ HospitalRoute.post(
   // 👈 middleware to parse stringified JSON
   createHospitalProfile
 );
+
+
+
+
+
+
+
+
+
+
 
 
 export default HospitalRoute;

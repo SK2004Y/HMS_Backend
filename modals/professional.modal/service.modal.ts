@@ -2,7 +2,7 @@ import mongoose, { Document, Schema, Types } from "mongoose";
 
 //services interface
 
-export interface IHospitalServices {
+export interface IProfessionalServices {
   userId: mongoose.Types.ObjectId;
   category: string;
   serviceName: string;
@@ -74,7 +74,7 @@ export const socialLinkSchema = new Schema<ISocialLink>(
   { _id: false }
 );
 
-const hospitalServiceSchema = new Schema<IHospitalServices>(
+const proefessionalServiceSchema = new Schema<IProfessionalServices>(
   {
     userId: {
       type: Schema.Types.ObjectId,
@@ -148,14 +148,15 @@ const hospitalServiceSchema = new Schema<IHospitalServices>(
     },
     serviceType: {
       type: String,
-      default: "hospital",
+      default: "professional",
     },
   },
   { timestamps: true }
 );
 
-hospitalServiceSchema.index({ location: "2dsphere" });
-export const HospitalService = mongoose.model<IHospitalServices>(
-  "HospitalService",
- hospitalServiceSchema
+
+proefessionalServiceSchema.index({ location: "2dsphere" });
+export const ProfessionalService = mongoose.model<IProfessionalServices>(
+  "ProfessionalService",
+ proefessionalServiceSchema
 );

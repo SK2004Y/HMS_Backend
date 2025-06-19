@@ -2,7 +2,7 @@ import express, {Request,Response} from "express"
 import { Router } from "express"
 import { isAuthneticated } from "../../middleware/auth"
 import { updateAccessToken } from "../../controllers/user.controller"
-import { AllDiagnosticServices, AllDoctorServices, AllGymervices, AllHospitalServices, AllPharmacyServices, AllRadiologyServices, AllResortervices, DoctorallServices, DoctorallServicess, getAllServices, searchServices, searchServicesClinic, searchServicesRadiology, searchServicesResort, SingleDiagnosticService, SingleDoctorService, SingleGymService, SingleHospitalService, SinglePharmacyService, SingleRadiologyService, SingleResortService } from "../../controllers/patient/service.controller"
+import { AllDiagnosticServices, AllDoctorServices, AllGymervices, AllHospitalServices, AllPharmacyServices, AllRadiologyServices, AllResortervices, DoctorallServices, DoctorallServicess, getAllServices, getServiceByTypeAndId, searchServices, searchServicesClinic, searchServicesRadiology, searchServicesResort, SingleDiagnosticService, SingleDoctorService, SingleGymService, SingleHospitalService, SinglePharmacyService, SingleRadiologyService, SingleResortService } from "../../controllers/patient/service.controller"
 import { get } from "http"
 
 import { NotificationModel } from "../../modals/notifications/notification.modal"
@@ -75,6 +75,20 @@ PatientRouter.get("/DoctorService/:id", SingleGymService);
 
 
 
+
+
+
+
+
+
+
+
+//view single services details 
+PatientRouter.get(
+  "/services/view/:serviceType/:id",
+  updateAccessToken,
+  getServiceByTypeAndId
+);
 
 
 PatientRouter.get("/notification/:userId", async (req:Request, res:Response) => {

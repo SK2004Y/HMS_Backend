@@ -17,13 +17,13 @@ import { reportRouter } from './routes/patient-report.router';
 import { setupSocket } from './socket/socket.index';  //socket io intializing
 import http from "http"
 import { availabilityRouter } from './routes/availability.route';
-import officeRouter from './routes/admin-office.router';
-import { getrecRouter } from './routes/getrecommended.route';
+
+
 import reports from './routes/reports/doctor-report.route';
-import  medicineRouter from './routes/medicine.route';
-import clinicRouter from './routes/clinic.route';
+
+
 import diaRouter from './routes/diagnostic.route';
-import resortRouter from './routes/resort.route';
+
 import GymRoute from './routes/gym/gym.route';
 import diagnosisRouter from './routes/diagnosis/diagnosis.route';
 import HospitalRoute from './routes/hospital/hospital.route';
@@ -88,15 +88,15 @@ app.use("/api/vs/patient",reportRouter);
 app.use("/api/vs/doctor", reports);
 app.use("/api/vs/appointment",appointmentRouter)
 app.use("/api/vs/availability",availabilityRouter);
-app.use("/api/vs/office",officeRouter);
-app.use("/api/vs/recommended",getrecRouter);
+
+
 // app.use("/api/vs",orderRouter);
 app.use("/api/vs",notificationRoute);
 // app.use("/api/vs/",layoutRouter);
-app.use("/api/vs/medicine",medicineRouter);
-app.use("/api/vs/clinic",clinicRouter);
+
+
 app.use("/api/vs/diagnostic",diaRouter)
-app.use("/api/vs/resorts",resortRouter)
+
 app.use("/api/vs/gym",GymRoute);
 app.use("/api/vs/diagnosis",diagnosisRouter)
 app.use("/api/vs/hospital",HospitalRoute);

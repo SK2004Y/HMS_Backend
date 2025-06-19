@@ -26,6 +26,8 @@ import { createHospitalProfile } from '../../controllers/Hospital/profile.contro
 import { createRadiologyProfile } from '../../controllers/radiology/profile.controller';
 import { createRadiologyService } from '../../controllers/radiology/services.controller';
 import { createClinicService } from '../../controllers/clinic/service.controller';
+import { createProfessionalService } from '../../controllers/professional/professional.controller';
+import { createHospitalService } from '../../controllers/Hospital/services.controller';
 
 
 //all profileform handler 
@@ -70,5 +72,26 @@ ClinicRoute.post(
   upload.any(), // handles multiple image uploads under 'files' field
   createClinicService
 );
+
+
+ClinicRoute.post(
+  "/create-service-professional",
+  updateAccessToken,
+  isAuthneticated,
+  upload.any(), // handles multiple image uploads under 'files' field
+  createProfessionalService
+);
+
+
+
+ClinicRoute.post(
+  "/create-service-hospital",
+  updateAccessToken,
+  isAuthneticated,
+  upload.any(), // handles multiple image uploads under 'files' field
+ createHospitalService
+);
+
+
 
 export default ClinicRoute;

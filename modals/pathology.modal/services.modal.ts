@@ -2,22 +2,26 @@ import mongoose, { Document, Schema, Types } from "mongoose";
 
 //services interface
 
-export interface IHospitalServices {
+export interface IReport {
+  reportsname: string[];
+  courierfee: number;
+  persornfee: number;
+}
+
+export interface IPathologyServices {
   userId: mongoose.Types.ObjectId;
   category: string;
   serviceName: string;
-  description?: string;
+  description: string;
   mode: string[];
   homeServicePrice:number;
-  hybridServicePrice:number;
-  e_clinicServicePrice:number;
-  onlineServicePrice: number;
+  fee: number;
   estimatedPrice?: number;
-
-  image?: [{
+  reports: IReport[];
+  image?: {
     url: string;
     public_id: string;
-  }];
+  };
 
   reviews?: IReview[];
   socialLink?: ISocialLink[];
@@ -50,14 +54,28 @@ export interface ISocialLink {
   url: string;
 }
 
+//IReport schema
 
+export const ReportSchema = new mongoose.Schema<IReport>({
+  reportsname: [
+    {
+      type: [String],
+    },
+  ],
+  courierfee: {
+    type: Number,
+  },
+  persornfee: {
+    type: Number,
+  },
+});
 
 //review Schema
 export const ReviewSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
-    refPath: "User",
+    refPath: "reviews.userType",
   },
   userType: { type: String, required: true, enum: ["Patient", "Doctor"] },
   rating: { type: Number, required: true, min: 1, max: 5 },
@@ -74,7 +92,7 @@ export const socialLinkSchema = new Schema<ISocialLink>(
   { _id: false }
 );
 
-const hospitalServiceSchema = new Schema<IHospitalServices>(
+const pathologyServiceSchema = new Schema<IPathologyServices>(
   {
     userId: {
       type: Schema.Types.ObjectId,
@@ -89,21 +107,21 @@ const hospitalServiceSchema = new Schema<IHospitalServices>(
       type: String,
       required: [true, "please enter a service name"],
     },
-    onlineServicePrice: {
+    fee: {
       type: Number,
-      
+      required: [true, "please enter a service price "],
     },
     estimatedPrice: {
       type: Number,
     },
-    image: [{
+    image: {
       url: {
         type: String,
       },
       public_id: {
         type: String,
       },
-    }],
+    },
     mode: [
       {
         type: String,
@@ -112,17 +130,12 @@ const hospitalServiceSchema = new Schema<IHospitalServices>(
     homeServicePrice: {
       type: Number,
     },
-    hybridServicePrice:{
-        type:Number,
 
-    },
-    e_clinicServicePrice:{
-        type:Number,
-    },
     description: {
       type: String,
+      required: [true, "Please enter a something about servics"],
     },
-
+    reports: [ReportSchema],
     reviews: ReviewSchema,
     socialLink: socialLinkSchema,
     isAvailable: {
@@ -148,14 +161,14 @@ const hospitalServiceSchema = new Schema<IHospitalServices>(
     },
     serviceType: {
       type: String,
-      default: "hospital",
+      default: "pathology",
     },
   },
   { timestamps: true }
 );
 
-hospitalServiceSchema.index({ location: "2dsphere" });
-export const HospitalService = mongoose.model<IHospitalServices>(
-  "HospitalService",
- hospitalServiceSchema
+pathologyServiceSchema.index({ location: "2dsphere" });
+export const PathologyService = mongoose.model<IPathologyServices>(
+  "PathologyService",
+  pathologyServiceSchema
 );

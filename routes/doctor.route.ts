@@ -44,7 +44,7 @@ doctorRoute.put("/get-order/:id/status", updateOrderStatus);
 
 // import multer from "multer";
 import { parseFormData } from '../middleware/formPaser';
-import { updateMedicineShop } from '../controllers/medicineShop.controller';
+
 import { createAppointment } from '../controllers/chats/appointment.controller';
 import { upload } from '../utils/multer'; // or configure for Cloudinary
 import { updateAccessToken } from '../controllers/user.controller';
@@ -179,7 +179,7 @@ doctorRoute.delete('/d-delete-profile/:id', isAuthneticated, deleteDoctorProfile
 doctorRoute.patch("/d-toggle-communication/:id", toggleCommunication);
 
 
-doctorRoute.patch('/d-update/:id', updateMedicineShop);
+
 
 
 //doctor stats by admin

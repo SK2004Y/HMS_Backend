@@ -11,6 +11,8 @@ import { ClinicService } from "../../modals/clinic.modal/service.modal";
 import ErrorHandler from "../../utils/ErrorHandler";
 import express, {NextFunction,Request,Response}  from "express"
 import {redis} from "../../utils/redis"
+import { PathologyService } from "../../modals/pathology.modal/services.modal";
+import { ProfessionalService } from "../../modals/professional.modal/service.modal";
 //patient services get pay for it 
 export const SingleDoctorService = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -154,27 +156,45 @@ export const getAllServices = async (req: Request, res: Response) => {
     };
 
     // ✅ Parallel aggregation from all service models
-    const [doctors, ambulances, diagnostics, radiologies, resorts,clinic] =
-      await Promise.all([
-        DoctorService.aggregate(buildPipeline(useGeo)).then((docs) =>
-          docs.map((doc) => ({ ...doc, serviceType: "doctor" }))
-        ),
-        AmbulanceService.aggregate(buildPipeline(useGeo)).then((docs) =>
-          docs.map((doc) => ({ ...doc, serviceType: "ambulance" }))
-        ),
-        DiagnosticService.aggregate(buildPipeline(useGeo)).then((docs) =>
-          docs.map((doc) => ({ ...doc, serviceType: "diagnostic" }))
-        ),
-        RadiologyService.aggregate(buildPipeline(useGeo)).then((docs) =>
-          docs.map((doc) => ({ ...doc, serviceType: "radiology" }))
-        ),
-        ResortService.aggregate(buildPipeline(useGeo)).then((docs) =>
-          docs.map((doc) => ({ ...doc, serviceType: "resort" }))
-        ),
-        ClinicService.aggregate(buildPipeline(useGeo)).then((docs) =>
-          docs.map((doc) => ({ ...doc, serviceType: "clinic" }))
-        ),
-      ]);
+    const [
+      doctors,
+      ambulances,
+      diagnostics,
+      radiologies,
+      resorts,
+      clinic,
+      pathology,
+      professional,
+      hospital,
+    ] = await Promise.all([
+      DoctorService.aggregate(buildPipeline(useGeo)).then((docs) =>
+        docs.map((doc) => ({ ...doc, serviceType: "doctor" }))
+      ),
+      AmbulanceService.aggregate(buildPipeline(useGeo)).then((docs) =>
+        docs.map((doc) => ({ ...doc, serviceType: "ambulance" }))
+      ),
+      DiagnosticService.aggregate(buildPipeline(useGeo)).then((docs) =>
+        docs.map((doc) => ({ ...doc, serviceType: "diagnostic" }))
+      ),
+      RadiologyService.aggregate(buildPipeline(useGeo)).then((docs) =>
+        docs.map((doc) => ({ ...doc, serviceType: "radiology" }))
+      ),
+      ResortService.aggregate(buildPipeline(useGeo)).then((docs) =>
+        docs.map((doc) => ({ ...doc, serviceType: "resort" }))
+      ),
+      ClinicService.aggregate(buildPipeline(useGeo)).then((docs) =>
+        docs.map((doc) => ({ ...doc, serviceType: "clinic" }))
+      ),
+      PathologyService.aggregate(buildPipeline(useGeo)).then((docs) =>
+        docs.map((doc) => ({ ...doc, serviceType: "pathology" }))
+      ),
+      ProfessionalService.aggregate(buildPipeline(useGeo)).then((docs) =>
+        docs.map((doc) => ({ ...doc, serviceType: "professional" }))
+      ),
+      HospitalService.aggregate(buildPipeline(useGeo)).then((docs) =>
+        docs.map((doc) => ({ ...doc, serviceType: "hospital" }))
+      ),
+    ]);
 
     // ✅ Merge into one combined array
     const allServices = [
@@ -184,6 +204,9 @@ export const getAllServices = async (req: Request, res: Response) => {
       ...radiologies,
       ...resorts,
       ...clinic,
+      ...pathology,
+      ...professional,
+      ...hospital,
     ];
 
     // ✅ Store in Redis cache with short TTL (e.g., 5 minutes)
@@ -1032,3 +1055,87 @@ export async function searchServicesClinic(
     return next(new ErrorHandler(error.message, 400));
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//view all services
+
+// controller/serviceView.ts
+
+
+export const getServiceByTypeAndId = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { serviceType, id } = req.params;
+
+
+    console.log(`getservices hitted `,serviceType,id);
+    let service;
+    switch (serviceType) {
+      case "doctor":
+        service = await DoctorService.findById(id);
+        break;
+      case "radiology":
+        service = await RadiologyService.findById(id);
+        break;
+
+      case "resort":
+        service = await ResortService.findById(id);
+        break;
+
+      case "clinic":
+        service = await ClinicService.findById(id);
+        break;
+      case "hospital":
+        service = await HospitalService.findById(id);
+        break;
+      case "professional":
+        service = await ProfessionalService.findById(id);
+        break;
+      case "pathology":
+        service = await PathologyService.findById(id);
+        break;
+
+      case "ambulance":
+        service = await AmbulanceService.findById(id);
+        break;
+      // add more types...
+      default:
+        return next(new ErrorHandler("Invalid service type", 400));
+    }
+
+    if (!service) return next(new ErrorHandler("Service not found", 404));
+
+    res.status(200).json({ success: true, service });
+  } catch (error: any) {
+    return next(new ErrorHandler(error.message, 500));
+  }
+};
+
+

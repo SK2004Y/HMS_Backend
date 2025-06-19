@@ -1,18 +1,18 @@
 import express, { NextFunction, Request, Response } from "express";
 import { CatchAsyncError } from "../../middleware/catchAsyncErrors";
-import { streamUploadMultipleToCloudinary, streamUploadToCloudinary } from "../../utils/cloudinary";
-import { HospitalService } from "../../modals/hospital.modal/services.modal";
+import {
+  streamUploadMultipleToCloudinary,
+  streamUploadToCloudinary,
+} from "../../utils/cloudinary";
+import { ProfessionalService } from "../../modals/professional.modal/service.modal";
 import ErrorHandler from "../../utils/ErrorHandler";
 
-
-
-export const createHospitalService = CatchAsyncError(
+export const createProfessionalService = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-
-      console.log(`hospital body data `,req.body)
+      console.log(`clinic body data `, req.body);
       const files = req.files as Express.Multer.File[];
-  let location=undefined;
+      let location = undefined;
       if (req.body.location) {
         try {
           const parsed = JSON.parse(req.body.location);
@@ -38,8 +38,6 @@ export const createHospitalService = CatchAsyncError(
           });
         }
       }
-
-
 
       const folder = "clinic";
       const { images } = await streamUploadMultipleToCloudinary(files, folder);
@@ -70,29 +68,16 @@ export const createHospitalService = CatchAsyncError(
         image: imageData, // ✅ store the uploaded image info
       };
 
-      const clinicService = new HospitalService(parsedBody);
-      await clinicService.save();
+      const professionalService = new ProfessionalService(parsedBody);
+      await professionalService.save();
 
       res.status(201).json({
         success: true,
-        clinicService,
-        message: "service created successfully",
+        professionalService,
+        message: " service created successfully",
       });
     } catch (error: any) {
       return next(new ErrorHandler(error.message, 400));
     }
   }
 );
-
-
-
-
-
-
-
-
-
-
-
-
-
