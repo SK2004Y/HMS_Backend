@@ -214,7 +214,7 @@ export const getAllServices = async (req: Request, res: Response) => {
       cacheKey,
       JSON.stringify({ services: allServices }),
       "EX",
-      100
+      60 * 60 * 4
     );
 
     return res.status(200).json({
@@ -826,35 +826,40 @@ export async function searchServices(
 
 
 
+
+
 export async function searchServicesRadiology(
   req: Request,
   res: Response,
   next: NextFunction
 ) {
   try {
-    // 1️⃣ Extract query parameters from request
     const { q, lat, lng, page = "1", limit = "16" } = req.query;
 
-    // const searchTerm = typeof q === "string" && q.trim() ? q.trim() : null;
-  
- 
-    
-
-    console.log("▶️ Hit searchServicesRadiology with query:", req.query);
-
-    // 2️⃣ Convert and sanitize inputs
     const searchTerm = typeof q === "string" && q.trim() ? q.trim() : null;
     const latNum = lat ? Number(lat) : null;
     const lngNum = lng ? Number(lng) : null;
-    const pageNum = Math.max(Number(page), 1); // Ensure page is at least 1
-    const limitNum = Math.max(Number(limit), 1); // Ensure limit is at least 1
+    const pageNum = Math.max(Number(page), 1);
+    const limitNum = Math.max(Number(limit), 1);
     const skip = (pageNum - 1) * limitNum;
+
     const hasGeo =
       latNum != null && lngNum != null && !isNaN(latNum) && !isNaN(lngNum);
-    // 3️⃣ Build MongoDB aggregation pipeline
+
+    // 🔐 Create a unique Redis key
+    const cacheKey = `radiologyServices:${searchTerm || "all"}:${lat || "0"}:${
+      lng || "0"
+    }:page${pageNum}:limit${limitNum}`;
+    const cached = await redis.get(cacheKey);
+
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      return res.status(200).json({ ...parsed, cached: true });
+    }
+
+    // 🧱 Build pipeline
     const basePipeline: any[] = [];
 
-    // Build basePipeline
     if (hasGeo) {
       basePipeline.push({
         $geoNear: {
@@ -888,13 +893,13 @@ export async function searchServicesRadiology(
       basePipeline.push({ $sort: { distance: 1 } });
     }
 
-    // 1️⃣ Count
+    // 🔢 Count total
     const countPipeline = [...basePipeline, { $count: "total" }];
     const countResult = await RadiologyService.aggregate(countPipeline);
     const total = countResult[0]?.total || 0;
     const totalPages = Math.ceil(total / limitNum);
 
-    // 2️⃣ Fetch paginated data
+    // 📦 Paginated data
     const paginatedPipeline = [
       ...basePipeline,
       { $skip: skip },
@@ -902,22 +907,32 @@ export async function searchServicesRadiology(
     ];
 
     const results = await RadiologyService.aggregate(paginatedPipeline);
-    console.log("🚀 Total Count:", total);
-    console.log("📦 Services Returned:", results.length);
-    console.log("🧾 Current Page:", pageNum, "| Total Pages:", totalPages);
 
-    // ✅ Respond with data and pagination metadata
+    // 🚀 Store in Redis for 4 hours
+    await redis.set(
+      cacheKey,
+      JSON.stringify({
+        services: results,
+        total,
+        totalPages,
+        page: pageNum,
+      }),
+     "EX",60*60*4
+    );
+
     return res.status(200).json({
       services: results,
       total,
       totalPages,
       page: pageNum,
+      cached: false,
     });
   } catch (error: any) {
-    console.error("❌ Search Services Error:", error);
+    console.error("❌ Search Services Resort Error:", error);
     return next(new ErrorHandler(error.message, 400));
   }
 }
+
 
 
 
@@ -929,20 +944,34 @@ export async function searchServicesResort(
   next: NextFunction
 ) {
   try {
-    const { q, lat, lng } = req.query;
+    const { q, lat, lng, page = "1", limit = "16" } = req.query;
 
-    console.log(`hitted searchServices with query:`, req.query);
     const searchTerm = typeof q === "string" && q.trim() ? q.trim() : null;
     const latNum = lat ? Number(lat) : null;
     const lngNum = lng ? Number(lng) : null;
+    const pageNum = Math.max(Number(page), 1);
+    const limitNum = Math.max(Number(limit), 1);
+    const skip = (pageNum - 1) * limitNum;
 
-    const pipeline: any[] = [];
-
-    // If we have valid coordinates, add geoNear stage
     const hasGeo =
       latNum != null && lngNum != null && !isNaN(latNum) && !isNaN(lngNum);
+
+    // 🔐 Create a unique Redis key
+    const cacheKey = `resortServices:${searchTerm || "all"}:${lat || "0"}:${
+      lng || "0"
+    }:page${pageNum}:limit${limitNum}`;
+    const cached = await redis.get(cacheKey);
+
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      return res.status(200).json({ ...parsed, cached: true });
+    }
+
+    // 🧱 Build pipeline
+    const basePipeline: any[] = [];
+
     if (hasGeo) {
-      pipeline.push({
+      basePipeline.push({
         $geoNear: {
           near: { type: "Point", coordinates: [lngNum, latNum] },
           distanceField: "distance",
@@ -951,12 +980,10 @@ export async function searchServicesResort(
       });
     }
 
-    // Always filter available services
-    pipeline.push({ $match: { isAvailable: true } });
+    basePipeline.push({ $match: { isAvailable: true } });
 
-    // Text search filter
     if (searchTerm) {
-      pipeline.push({
+      basePipeline.push({
         $match: {
           $or: [
             { serviceName: { $regex: searchTerm, $options: "i" } },
@@ -967,23 +994,51 @@ export async function searchServicesResort(
       });
     }
 
-    // If geo search, compute distance in km and sort by proximity
     if (hasGeo) {
-      pipeline.push({
+      basePipeline.push({
         $addFields: {
           distanceInKm: { $round: [{ $divide: ["$distance", 1000] }, 2] },
         },
       });
-      pipeline.push({ $sort: { distance: 1 } });
+      basePipeline.push({ $sort: { distance: 1 } });
     }
 
-    // Limit results
-    pipeline.push({ $limit: 20 });
+    // 🔢 Count total
+    const countPipeline = [...basePipeline, { $count: "total" }];
+    const countResult = await ResortService.aggregate(countPipeline);
+    const total = countResult[0]?.total || 0;
+    const totalPages = Math.ceil(total / limitNum);
 
-    const results = await ResortService.aggregate(pipeline);
-    return res.status(200).json({ data: results });
+    // 📦 Paginated data
+    const paginatedPipeline = [
+      ...basePipeline,
+      { $skip: skip },
+      { $limit: limitNum },
+    ];
+
+    const results = await ResortService.aggregate(paginatedPipeline);
+
+    // 🚀 Store in Redis for 4 hours
+    await redis.set(
+      cacheKey,
+      JSON.stringify({
+        services: results,
+        total,
+        totalPages,
+        page: pageNum,
+      }),
+       "EX",60 * 60 * 4   //4hours cache
+    );
+
+    return res.status(200).json({
+      services: results,
+      total,
+      totalPages,
+      page: pageNum,
+      cached: false,
+    });
   } catch (error: any) {
-    console.error("Search Services Error:", error);
+    console.error("❌ Search Services Resort Error:", error);
     return next(new ErrorHandler(error.message, 400));
   }
 }
@@ -997,20 +1052,34 @@ export async function searchServicesClinic(
   next: NextFunction
 ) {
   try {
-    const { q, lat, lng } = req.query;
+    const { q, lat, lng, page = "1", limit = "16" } = req.query;
 
-    console.log(`hitted searchServices with query:`, req.query);
     const searchTerm = typeof q === "string" && q.trim() ? q.trim() : null;
     const latNum = lat ? Number(lat) : null;
     const lngNum = lng ? Number(lng) : null;
+    const pageNum = Math.max(Number(page), 1);
+    const limitNum = Math.max(Number(limit), 1);
+    const skip = (pageNum - 1) * limitNum;
 
-    const pipeline: any[] = [];
-
-    // If we have valid coordinates, add geoNear stage
     const hasGeo =
       latNum != null && lngNum != null && !isNaN(latNum) && !isNaN(lngNum);
+
+    // 🔐 Create a unique Redis key
+    const cacheKey = `clinicServices:${searchTerm || "all"}:${lat || "0"}:${
+      lng || "0"
+    }:page${pageNum}:limit${limitNum}`;
+    const cached = await redis.get(cacheKey);
+
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      return res.status(200).json({ ...parsed, cached: true });
+    }
+
+    // 🧱 Build pipeline
+    const basePipeline: any[] = [];
+
     if (hasGeo) {
-      pipeline.push({
+      basePipeline.push({
         $geoNear: {
           near: { type: "Point", coordinates: [lngNum, latNum] },
           distanceField: "distance",
@@ -1019,12 +1088,10 @@ export async function searchServicesClinic(
       });
     }
 
-    // Always filter available services
-    pipeline.push({ $match: { isAvailable: true } });
+    basePipeline.push({ $match: { isAvailable: true } });
 
-    // Text search filter
     if (searchTerm) {
-      pipeline.push({
+      basePipeline.push({
         $match: {
           $or: [
             { serviceName: { $regex: searchTerm, $options: "i" } },
@@ -1035,26 +1102,281 @@ export async function searchServicesClinic(
       });
     }
 
-    // If geo search, compute distance in km and sort by proximity
     if (hasGeo) {
-      pipeline.push({
+      basePipeline.push({
         $addFields: {
           distanceInKm: { $round: [{ $divide: ["$distance", 1000] }, 2] },
         },
       });
-      pipeline.push({ $sort: { distance: 1 } });
+      basePipeline.push({ $sort: { distance: 1 } });
     }
 
-    // Limit results
-    pipeline.push({ $limit: 20 });
+    // 🔢 Count total
+    const countPipeline = [...basePipeline, { $count: "total" }];
+    const countResult = await ClinicService.aggregate(countPipeline);
+    const total = countResult[0]?.total || 0;
+    const totalPages = Math.ceil(total / limitNum);
 
-    const results = await ResortService.aggregate(pipeline);
-    return res.status(200).json({ data: results });
+    // 📦 Paginated data
+    const paginatedPipeline = [
+      ...basePipeline,
+      { $skip: skip },
+      { $limit: limitNum },
+    ];
+
+    const results = await ClinicService.aggregate(paginatedPipeline);
+
+    // 🚀 Store in Redis for 4 hours
+    await redis.set(
+      cacheKey,
+      JSON.stringify({
+        services: results,
+        total,
+        totalPages,
+        page: pageNum,
+      }),
+      "EX",60 * 60 * 4 
+    );
+
+    return res.status(200).json({
+      services: results,
+      total,
+      totalPages,
+      page: pageNum,
+      cached: false,
+    });
   } catch (error: any) {
-    console.error("Search Services Error:", error);
+    console.error("❌ Search Services Resort Error:", error);
     return next(new ErrorHandler(error.message, 400));
   }
 }
+
+
+
+export async function searchServicesProfessional(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const { q, lat, lng, page = "1", limit = "16" } = req.query;
+
+    const searchTerm = typeof q === "string" && q.trim() ? q.trim() : null;
+    const latNum = lat ? Number(lat) : null;
+    const lngNum = lng ? Number(lng) : null;
+    const pageNum = Math.max(Number(page), 1);
+    const limitNum = Math.max(Number(limit), 1);
+    const skip = (pageNum - 1) * limitNum;
+
+    const hasGeo =
+      latNum != null && lngNum != null && !isNaN(latNum) && !isNaN(lngNum);
+
+    // 🔐 Create a unique Redis key
+    const cacheKey = `professionalServices:${searchTerm || "all"}:${lat || "0"}:${
+      lng || "0"
+    }:page${pageNum}:limit${limitNum}`;
+    const cached = await redis.get(cacheKey);
+
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      return res.status(200).json({ ...parsed, cached: true });
+    }
+
+    // 🧱 Build pipeline
+    const basePipeline: any[] = [];
+
+    if (hasGeo) {
+      basePipeline.push({
+        $geoNear: {
+          near: { type: "Point", coordinates: [lngNum, latNum] },
+          distanceField: "distance",
+          spherical: true,
+        },
+      });
+    }
+
+    basePipeline.push({ $match: { isAvailable: true } });
+
+    if (searchTerm) {
+      basePipeline.push({
+        $match: {
+          $or: [
+            { serviceName: { $regex: searchTerm, $options: "i" } },
+            { category: { $regex: searchTerm, $options: "i" } },
+            { description: { $regex: searchTerm, $options: "i" } },
+          ],
+        },
+      });
+    }
+
+    if (hasGeo) {
+      basePipeline.push({
+        $addFields: {
+          distanceInKm: { $round: [{ $divide: ["$distance", 1000] }, 2] },
+        },
+      });
+      basePipeline.push({ $sort: { distance: 1 } });
+    }
+
+    // 🔢 Count total
+    const countPipeline = [...basePipeline, { $count: "total" }];
+    const countResult = await ProfessionalService.aggregate(countPipeline);
+    const total = countResult[0]?.total || 0;
+    const totalPages = Math.ceil(total / limitNum);
+
+    // 📦 Paginated data
+    const paginatedPipeline = [
+      ...basePipeline,
+      { $skip: skip },
+      { $limit: limitNum },
+    ];
+
+    const results = await ProfessionalService.aggregate(paginatedPipeline);
+
+    // 🚀 Store in Redis for 4 hours
+    await redis.set(
+      cacheKey,
+      JSON.stringify({
+        services: results,
+        total,
+        totalPages,
+        page: pageNum,
+      }),
+      "EX",
+      60 * 60 * 4
+    );
+
+    return res.status(200).json({
+      services: results,
+      total,
+      totalPages,
+      page: pageNum,
+      cached: false,
+    });
+  } catch (error: any) {
+    console.error("❌ Search Services Resort Error:", error);
+    return next(new ErrorHandler(error.message, 400));
+  }
+}
+
+
+
+export async function searchServicesHospital(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const { q, lat, lng, page = "1", limit = "16" } = req.query;
+
+    const searchTerm = typeof q === "string" && q.trim() ? q.trim() : null;
+    const latNum = lat ? Number(lat) : null;
+    const lngNum = lng ? Number(lng) : null;
+    const pageNum = Math.max(Number(page), 1);
+    const limitNum = Math.max(Number(limit), 1);
+    const skip = (pageNum - 1) * limitNum;
+
+    const hasGeo =
+      latNum != null && lngNum != null && !isNaN(latNum) && !isNaN(lngNum);
+
+    // 🔐 Create a unique Redis key
+    const cacheKey = `hospitalServices:${searchTerm || "all"}:${
+      lat || "0"
+    }:${lng || "0"}:page${pageNum}:limit${limitNum}`;
+    const cached = await redis.get(cacheKey);
+
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      return res.status(200).json({ ...parsed, cached: true });
+    }
+
+    // 🧱 Build pipeline
+    const basePipeline: any[] = [];
+
+    if (hasGeo) {
+      basePipeline.push({
+        $geoNear: {
+          near: { type: "Point", coordinates: [lngNum, latNum] },
+          distanceField: "distance",
+          spherical: true,
+        },
+      });
+    }
+
+    basePipeline.push({ $match: { isAvailable: true } });
+
+    if (searchTerm) {
+      basePipeline.push({
+        $match: {
+          $or: [
+            { serviceName: { $regex: searchTerm, $options: "i" } },
+            { category: { $regex: searchTerm, $options: "i" } },
+            { description: { $regex: searchTerm, $options: "i" } },
+          ],
+        },
+      });
+    }
+
+    if (hasGeo) {
+      basePipeline.push({
+        $addFields: {
+          distanceInKm: { $round: [{ $divide: ["$distance", 1000] }, 2] },
+        },
+      });
+      basePipeline.push({ $sort: { distance: 1 } });
+    }
+
+    // 🔢 Count total
+    const countPipeline = [...basePipeline, { $count: "total" }];
+    const countResult = await HospitalService.aggregate(countPipeline);
+    const total = countResult[0]?.total || 0;
+    const totalPages = Math.ceil(total / limitNum);
+
+    // 📦 Paginated data
+    const paginatedPipeline = [
+      ...basePipeline,
+      { $skip: skip },
+      { $limit: limitNum },
+    ];
+
+    const results = await HospitalService.aggregate(paginatedPipeline);
+
+    // 🚀 Store in Redis for 4 hours
+    await redis.set(
+      cacheKey,
+      JSON.stringify({
+        services: results,
+        total,
+        totalPages,
+        page: pageNum,
+      }),
+      "EX",
+      60 * 60 * 4
+    );
+
+    return res.status(200).json({
+      services: results,
+      total,
+      totalPages,
+      page: pageNum,
+      cached: false,
+    });
+  } catch (error: any) {
+    console.error("❌ Search Services Resort Error:", error);
+    return next(new ErrorHandler(error.message, 400));
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1129,6 +1451,9 @@ export const getServiceByTypeAndId = async (req: Request, res: Response, next: N
       default:
         return next(new ErrorHandler("Invalid service type", 400));
     }
+
+
+
 
     if (!service) return next(new ErrorHandler("Service not found", 404));
 
