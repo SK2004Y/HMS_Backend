@@ -2,7 +2,7 @@ import express, {Request,Response} from "express"
 import { Router } from "express"
 import { isAuthneticated } from "../../middleware/auth"
 import { updateAccessToken } from "../../controllers/user.controller"
-import { AllDiagnosticServices, AllDoctorServices, AllGymervices, AllHospitalServices, AllPharmacyServices, AllRadiologyServices, AllResortervices, DoctorallServices, DoctorallServicess, getAllServices, getServiceByTypeAndId, searchServices, searchServicesClinic, searchServicesRadiology, searchServicesResort, SingleDiagnosticService, SingleDoctorService, SingleGymService, SingleHospitalService, SinglePharmacyService, SingleRadiologyService, SingleResortService } from "../../controllers/patient/service.controller"
+import {  AllDoctorServices,  getAllServices, getServiceByTypeAndId, searchServices, searchServicesClinic, searchServicesRadiology, searchServicesResort,  SingleDoctorService,  } from "../../controllers/patient/service.controller"
 import { get } from "http"
 
 import { NotificationModel } from "../../modals/notifications/notification.modal"
@@ -18,7 +18,7 @@ PatientRouter.get("/doctorServices/page",getAllServices);
 
 
 
-PatientRouter.get("/Services/pages", DoctorallServices);
+// PatientRouter.get("/Services/pages", DoctorallServices);
 PatientRouter.get("/doctorService/p", searchServices);
 
 
@@ -41,36 +41,10 @@ PatientRouter.get("/clinicServices/p",searchServicesClinic);
 PatientRouter.get("/doctorService/:id",SingleDoctorService);
 
 
-//diagnosis 
-PatientRouter.get("/diagnosisServices", AllDiagnosticServices);
-PatientRouter.get("/diagnosisService/:id", SingleDiagnosticService);
 
 
 
-//Hospital
-PatientRouter.get("/hospitalServices", AllHospitalServices);
-PatientRouter.get("/hospitalService/:id", SingleHospitalService);
 
-//Radiology
-PatientRouter.get("/radiologyervices", AllRadiologyServices);
-PatientRouter.get("/radiologyService/:id", SingleRadiologyService);
-
-
-
-//Pharmacy 
-PatientRouter.get("/pharmacyServices", AllPharmacyServices);
-PatientRouter.get("/pharmacyService/:id", SinglePharmacyService);
-
-
-
-//Resort 
-PatientRouter.get("/resortServices",AllResortervices);
-PatientRouter.get("/DoctorService/:id", SingleResortService);
-
-//gym
-
-PatientRouter.get("/gymServices", AllGymervices);
-PatientRouter.get("/DoctorService/:id", SingleGymService);
 
 
 
@@ -86,7 +60,6 @@ PatientRouter.get("/DoctorService/:id", SingleGymService);
 //view single services details 
 PatientRouter.get(
   "/services/view/:serviceType/:id",
-  updateAccessToken,
   getServiceByTypeAndId
 );
 
