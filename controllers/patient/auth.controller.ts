@@ -5,11 +5,9 @@ import bcrypt from "bcryptjs";
 import userModel, { IUser } from "../../modals/user_model";
 import twilio from "twilio";
 import { redis } from "../../utils/redis";
+import { sendSMS } from "../../utils/smsgateway/sendSMS";
 // import twilioClient from "../config/twilioClient"; // Your Twilio client setup
-const twilioClient = twilio(
-  process.env.TWILIO_SID,
-  process.env.TWILIO_AUTH_TOKEN
-);
+
 
 
 
@@ -23,34 +21,48 @@ const generateToken = (userId: string) => {
 };
 
 //twilio
+
+
 export const sendOTP = async (req: Request, res: Response) => {
-  const { phone, name } = req.body;
-  if (!phone || !name) {
-    return res.status(400).json({ message: "Phone and name are required" });
-  }
-
-  // Create or update user in DB
-  let user = await userModel.findOne({ phone });
-  if (!user) {
-    user = await userModel.create({ name, phone, role: "patient" });
-  }
-
   try {
-    // Twilio Verify generates its own OTP behind the scenes.
-    const verification = await twilioClient.verify.v2
-      .services(process.env.TWILIO_VERIFY_SERVICE_SID!)
-      .verifications.create({ to: phone, channel: "sms" });
-    console.log("Verify SID:", verification.sid);
-    return res.status(200).json({ message: "OTP sent via Twilio Verify" });
+    const { phone, name } = req.body;
 
-   
-  } catch (err: any) {
-    return res.status(500).json({ message: "Failed to send OTP", error: err });
+    if (!phone || !name) {
+      return res.status(400).json({ message: "Phone and name are required" });
+    }
+
+    // Find or create user
+    let user = await userModel.findOne({ phone });
+    if (!user) {
+      user = await userModel.create({ name, phone, role: "patient" });
+    }
+
+    // Generate a 4-digit OTP
+    const otp = Math.floor(1000 + Math.random() * 9000); // Generates between 1000 and 9999
+
+    // Optionally store it in DB for verification later (e.g., in user.otp or a separate collection)
+    user.otp = otp;
+    user.otpExpire = new Date(Date.now() + 5 * 60 * 1000); // 5 min expiry
+    await user.save();
+
+    // Prepare SMS text
+    const smsText = `Your OTP to verify your account is ${otp}. Do not share it with anyone. - URONIN`;
+
+    // Send SMS
+   const res= await sendSMS(phone, smsText);
+    console.log(`sms otp is and ${otp}`,res);
+    // Respond
+    return res.status(200).json({
+      success: true,
+      message: `OTP sent to ${phone}`,
+      otp, // ❗ Remove this in production — shown here only for testing
+    });
+  } catch (error: any) {
+    console.error("OTP send error:", error.message);
+    return res.status(500).json({ message: "Failed to send OTP" });
   }
-
-
-
 };
+
 
 // controllers/patient/auth.controller.ts
 
