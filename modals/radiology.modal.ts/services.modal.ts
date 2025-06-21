@@ -13,10 +13,9 @@ export interface IRadiologyServices {
   category: string;
   serviceName: string;
   description: string;
-  mode: string[];
+  modes: string[];
   homeServicePrice:number;
-  fee: number;
-  estimatedPrice?: number;
+  onlineServicePrice: number;
   reports: IReport[];
   image?: {
     url: string;
@@ -107,13 +106,7 @@ const radiologyServiceSchema = new Schema<IRadiologyServices>(
       type: String,
       required: [true, "please enter a service name"],
     },
-    fee: {
-      type: Number,
-      required: [true, "please enter a service price "],
-    },
-    estimatedPrice: {
-      type: Number,
-    },
+
     image: {
       url: {
         type: String,
@@ -122,7 +115,7 @@ const radiologyServiceSchema = new Schema<IRadiologyServices>(
         type: String,
       },
     },
-    mode: [
+    modes: [
       {
         type: String,
       },
@@ -130,7 +123,9 @@ const radiologyServiceSchema = new Schema<IRadiologyServices>(
     homeServicePrice: {
       type: Number,
     },
-
+    onlineServicePrice: {
+      type: Number,
+    },
     description: {
       type: String,
       required: [true, "Please enter a something about servics"],
@@ -172,3 +167,5 @@ export const RadiologyService = mongoose.model<IRadiologyServices>(
   "RadiologyService",
   radiologyServiceSchema
 );
+
+

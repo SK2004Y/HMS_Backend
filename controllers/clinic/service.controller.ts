@@ -1,26 +1,27 @@
 import express, { NextFunction, Request, Response } from "express";
 import { CatchAsyncError } from "../../middleware/catchAsyncErrors";
-import { streamUploadMultipleToCloudinary, streamUploadToCloudinary } from "../../utils/cloudinary";
+import {
+  streamUploadMultipleToCloudinary,
+  streamUploadToCloudinary,
+} from "../../utils/cloudinary";
 import { ClinicService } from "../../modals/clinic.modal/service.modal";
 import ErrorHandler from "../../utils/ErrorHandler";
-
-
 
 export const createClinicService = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
+      console.log(`clinic body data `, req.body);
 
-      console.log(`clinic body data `,req.body)
       const files = req.files as Express.Multer.File[];
-  let location=undefined;
+      let location = undefined;
+
+      // ✅ Parse location safely
       if (req.body.location) {
         try {
           const parsed = JSON.parse(req.body.location);
-
           const lon = parseFloat(parsed.coordinates?.[0]);
           const lat = parseFloat(parsed.coordinates?.[1]);
 
-          // Only set if valid numbers
           if (!isNaN(lon) && !isNaN(lat)) {
             location = {
               type: "Point",
@@ -39,35 +40,31 @@ export const createClinicService = CatchAsyncError(
         }
       }
 
-
-
+      // ✅ Upload images
       const folder = "clinic";
       const { images } = await streamUploadMultipleToCloudinary(files, folder);
 
-      // ✅ You likely uploaded multiple images, so check if it's an array
       let imageData = { url: "", public_id: "" };
       if (images.length > 0) {
         imageData = {
-          url: images[0].url, // take the first one (if only one expected)
+          url: images[0].url,
           public_id: images[0].public_id,
         };
       }
 
-      // ✅ Safely parse location JSON
-
-      try {
-        location = JSON.parse(req.body.location);
-      } catch (err) {
-        return res
-          .status(400)
-          .json({ success: false, message: "Invalid location data" });
+      // ✅ Parse modes
+      let modes = req.body.modes;
+      if (typeof modes === "string") {
+        modes = modes.split(",").map((mode: string) => mode.trim());
       }
+      console.log("Parsed modes:", modes);
 
-      // ✅ Prepare and save to DB
+      // ✅ Prepare body for DB
       const parsedBody = {
         ...req.body,
+        modes,
         location,
-        image: imageData, // ✅ store the uploaded image info
+        image: imageData,
       };
 
       const clinicService = new ClinicService(parsedBody);
@@ -83,6 +80,10 @@ export const createClinicService = CatchAsyncError(
     }
   }
 );
+
+
+
+
 
 
 
@@ -154,9 +155,6 @@ export const createClinicService = CatchAsyncError(
 //           }
 //         }
 //       }
-      
-
-
 
 //       const folder = "clinic";
 //       const { images } = await streamUploadMultipleToCloudinary(files, folder);
@@ -200,8 +198,3 @@ export const createClinicService = CatchAsyncError(
 //     }
 //   }
 // );
-
-
-
-
-

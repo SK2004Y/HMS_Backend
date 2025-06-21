@@ -7,12 +7,12 @@ export interface IProfessionalServices {
   category: string;
   serviceName: string;
   description?: string;
-  mode: string[];
+  modes: string[];
   homeServicePrice:number;
   hybridServicePrice:number;
   e_clinicServicePrice:number;
   onlineServicePrice: number;
-  estimatedPrice?: number;
+  offlineServicePrice?: number;
 
   image?: [{
     url: string;
@@ -93,7 +93,7 @@ const proefessionalServiceSchema = new Schema<IProfessionalServices>(
       type: Number,
       
     },
-    estimatedPrice: {
+    offlineServicePrice: {
       type: Number,
     },
     image: [{
@@ -104,7 +104,7 @@ const proefessionalServiceSchema = new Schema<IProfessionalServices>(
         type: String,
       },
     }],
-    mode: [
+    modes: [
       {
         type: String,
       },

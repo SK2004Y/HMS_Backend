@@ -13,10 +13,9 @@ export interface IPathologyServices {
   category: string;
   serviceName: string;
   description: string;
-  mode: string[];
-  homeServicePrice:number;
-  fee: number;
-  estimatedPrice?: number;
+  modes: string[];
+  homeServicePrice: number;
+  onlineServicePrice: number;
   reports: IReport[];
   image?: {
     url: string;
@@ -107,13 +106,11 @@ const pathologyServiceSchema = new Schema<IPathologyServices>(
       type: String,
       required: [true, "please enter a service name"],
     },
-    fee: {
+    onlineServicePrice: {
       type: Number,
       required: [true, "please enter a service price "],
     },
-    estimatedPrice: {
-      type: Number,
-    },
+    
     image: {
       url: {
         type: String,
@@ -122,7 +119,7 @@ const pathologyServiceSchema = new Schema<IPathologyServices>(
         type: String,
       },
     },
-    mode: [
+    modes: [
       {
         type: String,
       },
@@ -172,3 +169,6 @@ export const PathologyService = mongoose.model<IPathologyServices>(
   "PathologyService",
   pathologyServiceSchema
 );
+
+
+

@@ -5,19 +5,24 @@ import mongoose, { Document, Schema, Types } from "mongoose";
 export interface IHospitalServices {
   userId: mongoose.Types.ObjectId;
   category: string;
+  roomTypes?: string[];
+  acRoomPrice?: number;
+  nonAcRoomPrice?: number;
   serviceName: string;
   description?: string;
-  mode: string[];
-  homeServicePrice:number;
-  hybridServicePrice:number;
-  e_clinicServicePrice:number;
-  onlineServicePrice: number;
-  estimatedPrice?: number;
+  modes: string[];
+  homeServicePrice?: number;
+  hybridServicePrice?: number;
+  e_clinicServicePrice?: number;
+  onlineServicePrice?: number;
+  offlineServicePrice?: number;
 
-  image?: [{
-    url: string;
-    public_id: string;
-  }];
+  image?: [
+    {
+      url: string;
+      public_id: string;
+    }
+  ];
 
   reviews?: IReview[];
   socialLink?: ISocialLink[];
@@ -85,26 +90,39 @@ const hospitalServiceSchema = new Schema<IHospitalServices>(
       type: String,
       required: [true, "Please select Category"],
     },
+    roomTypes: [
+      {
+        type: String,
+      },
+    ],
+    acRoomPrice: {
+      type: Number,
+    },
+    nonAcRoomPrice: {
+      type: Number,
+    },
+
     serviceName: {
       type: String,
       required: [true, "please enter a service name"],
     },
     onlineServicePrice: {
       type: Number,
-      
     },
-    estimatedPrice: {
+    offlineServicePrice: {
       type: Number,
     },
-    image: [{
-      url: {
-        type: String,
+    image: [
+      {
+        url: {
+          type: String,
+        },
+        public_id: {
+          type: String,
+        },
       },
-      public_id: {
-        type: String,
-      },
-    }],
-    mode: [
+    ],
+    modes: [
       {
         type: String,
       },
@@ -112,12 +130,11 @@ const hospitalServiceSchema = new Schema<IHospitalServices>(
     homeServicePrice: {
       type: Number,
     },
-    hybridServicePrice:{
-        type:Number,
-
+    hybridServicePrice: {
+      type: Number,
     },
-    e_clinicServicePrice:{
-        type:Number,
+    e_clinicServicePrice: {
+      type: Number,
     },
     description: {
       type: String,
@@ -159,3 +176,6 @@ export const HospitalService = mongoose.model<IHospitalServices>(
   "HospitalService",
  hospitalServiceSchema
 );
+
+
+

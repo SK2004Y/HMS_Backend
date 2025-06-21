@@ -2,38 +2,43 @@ import mongoose,{Document,Schema,Types} from "mongoose";
 
 //services interface
 
-export interface IResortServices{
-    userId:mongoose.Types.ObjectId
-    category:string;
-    serviceName:string;
-    price:number;
-    priceDays:number;
-    estimatedPrice?:number;
-    image?:[{
-        url:string;
-        public_id:string;
-    }];
-    video?:[
-      {
-        url:string,
-        public_id:string,
-      }
-    ];
-    description:string;
-    reviews?:IReview;
-    socialLink?:[ISocialLink],
-    isAvailable?:boolean;
-    lead?:boolean;
-    location?:{
-        type:"Point";
-        coordinates?:[number,number];
-        city?:string;
-        state?:string;
-        pincode?:string;
-        address?:string;
-        landmark?:string;
-    };
-    serviceType?:string;
+export interface IResortServices {
+  userId: mongoose.Types.ObjectId;
+  category: string;
+  roomTypes?: string[];
+  acRoomPrice?: number;
+  nonAcRoomPrice?: number;
+  serviceName: string;
+  price: number;
+  priceDays: number;
+  estimatedPrice?: number;
+  image?: [
+    {
+      url: string;
+      public_id: string;
+    }
+  ];
+  video?: [
+    {
+      url: string;
+      public_id: string;
+    }
+  ];
+  description: string;
+  reviews?: IReview;
+  socialLink?: [ISocialLink];
+  isAvailable?: boolean;
+  lead?: boolean;
+  location?: {
+    type: "Point";
+    coordinates?: [number, number];
+    city?: string;
+    state?: string;
+    pincode?: string;
+    address?: string;
+    landmark?: string;
+  };
+  serviceType?: string;
 }
 
 //review interface
@@ -83,8 +88,19 @@ const resortServiceSchema = new Schema<IResortServices>(
       ref: "User",
       required: true,
     },
-    category:{
-      type:String,
+    category: {
+      type: String,
+    },
+    roomTypes: [
+      {
+        type: String,
+      },
+    ],
+    acRoomPrice: {
+      type: Number,
+    },
+    nonAcRoomPrice: {
+      type: Number,
     },
     serviceName: {
       type: String,
@@ -92,34 +108,36 @@ const resortServiceSchema = new Schema<IResortServices>(
     },
     price: {
       type: Number,
-      
     },
-    priceDays:{
-      type:Number,
+    priceDays: {
+      type: Number,
     },
     estimatedPrice: {
       type: Number,
     },
-    image: [{
-      url: {
-        type: String,
+    image: [
+      {
+        url: {
+          type: String,
+        },
+        public_id: {
+          type: String,
+        },
       },
-      public_id: {
-        type: String,
+    ],
+    video: [
+      {
+        url: {
+          type: String,
+        },
+        public_id: {
+          type: String,
+        },
       },
-    }],
-    video:[{
-      url:{
-        type:String,
-      },
-      public_id:{
-        type:String,
-      }
-    }],
-   
+    ],
+
     description: {
       type: String,
-  
     },
     reviews: ReviewSchema,
     socialLink: socialLinkSchema,
@@ -137,7 +155,7 @@ const resortServiceSchema = new Schema<IResortServices>(
         enum: ["Point"],
         default: "Point",
       },
-      coordinates: { type: [Number]},
+      coordinates: { type: [Number] },
       city: String,
       state: String,
       pincode: String,
