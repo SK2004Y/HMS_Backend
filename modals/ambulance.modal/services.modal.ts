@@ -1,141 +1,85 @@
-import mongoose,{Document,Schema,Types} from "mongoose";
 
-//services interface
 
-export interface IAmbulanceServices {
-  userId: mongoose.Types.ObjectId;
-  serviceName: string;
-  fee: number;
-  estimatedPrice?: number;
-  image?: {
-    url: string;
-    public_id: string;
-  };
-  mode: string;
-  description: string;
-  reviews?: IReview;
-  socialLink?: [ISocialLink];
-  isAvailable?: boolean;
-  lead?: boolean;
-  serviceType?: string; // e.g., "Consultation", "Surgery", etc.
-  location?: {
-    type: "Point";
-    coordinates: [number, number];
-    city?: string;
-    state?: string;
-    pincode?: string;
-    address: string;
-    landmark: string;
-  };
-}
+import mongoose, { Document, Schema } from "mongoose";
 
-//review interface
-export interface IReview {
-  userId: mongoose.Types.ObjectId;
-  userType: "Patient" | "Doctor";
-  rating: number;
-  comment?: string;
+
+
+
+export interface IAmbulanceVehicle {
+  type: "ambulance" | "non-ambulance";
+  subType: string;
+  registrationNumber: string;
+  insuranceFrom: Date;
+  insuranceTo: Date;
+  declarationAccepted: boolean;
+  declarationDate: Date;
+  declarationPlace: string;
+  mobile: string;
+  otpVerified: boolean;
   createdAt?: Date;
-}
-
-//social paltform interface 
-export interface ISocialLink{
-    platform:string;
-    url:string;
+  updatedAt?: Date;
 }
 
 
-//review Schema 
-export const ReviewSchema = new mongoose.Schema({
-  userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    required: true,
-    refPath: "reviews.userType",
-  },
-  userType: { type: String, required: true, enum: ["Patient", "Doctor"] },
-  rating: { type: Number, required: true, min: 1, max: 5 },
-  comment: { type: String },
-  createdAt: { type: Date, default: Date.now },
-});
 
 
-//socialLinkSchema 
-export const socialLinkSchema = new Schema<ISocialLink>(
+
+
+
+
+
+const ambulanceVehicleSchema = new Schema<IAmbulanceVehicle>(
   {
-    platform: { type: String, required: true },
-    url: { type: String, required: true },
-  },
-  { _id: false }
-);
-
-
-const ambulanceServiceSchema = new Schema<IAmbulanceServices>(
-  {
-    userId: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
+    type: {
+      type: String,
+      enum: ["ambulance", "non-ambulance"],
       required: true,
     },
-    serviceName: {
+    subType: {
       type: String,
-      required: [true, "please enter a service name"],
+      required: true,
     },
-    fee: {
-      type: Number,
-      required: [true, "please enter a service price "],
-    },
-    estimatedPrice: {
-      type: Number,
-    },
-    image: {
-      url: {
-        type: String,
-      },
-      public_id: {
-        type: String,
-      },
-    },
-    mode: {
+    registrationNumber: {
       type: String,
-      enum: ["Online", "Offline", "Hybrid", "InHome", "e-Clinic"],
+      required: true,
+      unique: true,
     },
-    description: {
-      type: String,
-      required: [true, "Please enter a something about servics"],
+    insuranceFrom: {
+      type: Date,
+      required: true,
     },
-    reviews: ReviewSchema,
-    socialLink: socialLinkSchema,
-    isAvailable: {
+    insuranceTo: {
+      type: Date,
+      required: true,
+    },
+    declarationAccepted: {
       type: Boolean,
-      default: true,
+      required: true,
     },
-    lead: {
+    declarationDate: {
+      type: Date,
+      required: true,
+    },
+    declarationPlace: {
+      type: String,
+      required: true,
+    },
+    mobile: {
+      type: String,
+      required: true,
+    },
+    otpVerified: {
       type: Boolean,
       default: false,
-    },
-    location: {
-      type: {
-        type: String,
-        enum: ["Point"],
-        default: "Point",
-      },
-      coordinates: { type: [Number], required: true },
-      city: String,
-      state: String,
-      pincode: String,
-      address: String,
-      landmark: String,
-    },
-    serviceType: {
-      type: String,
-      default: "ambulance",
     },
   },
   { timestamps: true }
 );
 
-ambulanceServiceSchema.index({ location: "2dsphere" }); // Index for geospatial queries
-
-export const AmbulanceService =mongoose.model<IAmbulanceServices>("AmbulanceService",ambulanceServiceSchema);
-
-
+// 🧠 If already compiled, use existing model
+export const AmbulanceVehicle =
+  mongoose.models.AmbulanceVehicle ||
+  mongoose.model<IAmbulanceVehicle>(
+    "AmbulanceVehicle",
+    ambulanceVehicleSchema
+  );

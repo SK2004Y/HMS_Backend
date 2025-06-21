@@ -25,6 +25,8 @@ import { handleProfile } from "../../utils/handler/handler.controller";
 import { createHospitalProfile } from '../../controllers/Hospital/profile.controller';
 import { createMedicineProfile } from '../../controllers/medicine/profile.controller';
 import { createAmbulanceProfile } from '../../controllers/ambulance/profile.controller';
+import { sendOtp, verifyOtp } from '../../controllers/ambulance/otp.controller';
+import { createAmbulanceVehicleService } from '../../controllers/ambulance/services.controller';
 
 
 //all profileform handler 
@@ -43,6 +45,25 @@ AmbulanceRoute.post(
   // 👈 middleware to parse stringified JSON
   createAmbulanceProfile
 );
+
+
+
+
+
+
+//services 
+
+AmbulanceRoute.post("/sendotp",sendOtp);
+AmbulanceRoute.post("/verify",verifyOtp);
+
+
+
+AmbulanceRoute.post("/create-service",createAmbulanceVehicleService);
+
+
+
+
+
 
 
 export default AmbulanceRoute;
