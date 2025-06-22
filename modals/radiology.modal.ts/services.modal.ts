@@ -17,6 +17,8 @@ export interface IRadiologyServices {
   homeServicePrice:number;
   onlineServicePrice: number;
   reports: IReport[];
+  courierFee:number,
+  personFee:number;
   image?: {
     url: string;
     public_id: string;
@@ -56,18 +58,19 @@ export interface ISocialLink {
 //IReport schema
 
 export const ReportSchema = new mongoose.Schema<IReport>({
-  reportsname: [
+  reportsname: 
     {
       type: [String],
     },
-  ],
+  
   courierfee: {
     type: Number,
   },
   persornfee: {
     type: Number,
   },
-});
+ 
+}, { _id: false });
 
 //review Schema
 export const ReviewSchema = new mongoose.Schema({
@@ -131,6 +134,12 @@ const radiologyServiceSchema = new Schema<IRadiologyServices>(
       required: [true, "Please enter a something about servics"],
     },
     reports: [ReportSchema],
+    courierFee:{
+      type:Number
+    },
+    personFee:{
+      type:Number
+    },
     reviews: ReviewSchema,
     socialLink: socialLinkSchema,
     isAvailable: {

@@ -9,7 +9,13 @@ export const createRadiologyService = CatchAsyncError(
     try {
       console.log(`Radiology services hit with:`, req.body);
 
-      const parsedReports = JSON.parse(req.body.reports);
+      const parsedReports = JSON.parse(req.body.reports).map((report: any) => ({
+        reportsname: report.reportsname,
+        courierFee: Number(report.courierFee),
+        personFee: Number(report.personFee),
+      }));
+
+
       req.body.reports = parsedReports;
 
       let avatarData = {

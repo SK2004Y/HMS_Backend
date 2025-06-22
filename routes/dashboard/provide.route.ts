@@ -7,7 +7,7 @@ import {
   getOrderById,
 } from "../../controllers/order/order.controller";
 import userRouter from "../user.route";
-import { deleteServiceTypeandId, getAllServicesQuery,  toggleAvailability, updateServiceTypeandId, viewSingleServiceTypeandId } from "../../controllers/dashboard/allservices.controller";
+import { deleteServiceTypeandId, getAllServicesQuery,   toggleServiceField, updateServiceTypeandId, viewSingleServiceTypeandId } from "../../controllers/dashboard/allservices.controller";
 
 const dashboardRouter=express.Router();
 
@@ -31,7 +31,7 @@ dashboardRouter.delete("/delete/:serviceType/:serviceId", deleteServiceTypeandId
 dashboardRouter.get("/view/:serviceType/:serviceId",viewSingleServiceTypeandId);
 
 
-dashboardRouter.patch("/toogle/:serviceType/:serviceId", toggleAvailability);
+dashboardRouter.put("/toggle/:serviceType/:serviceId/:field", toggleServiceField);
 
 
 export default dashboardRouter;

@@ -107,8 +107,10 @@ export const getAllServicesQuery = CatchAsyncError(
           page,
         }),
         "EX",
-        60 * 60 * 3 // 3 hours
+        60*1 // 3 hours
       );
+
+      console.log(`hitted query with `,services);
 
       res.status(200).json({
         services,
@@ -126,62 +128,93 @@ export const getAllServicesQuery = CatchAsyncError(
 
 
 
-export const updateServiceTypeandId=CatchAsyncError(
-    async(req: Request, res: Response, next: NextFunction) =>{
+export const updateServiceTypeandId = CatchAsyncError(
+  async (req: Request, res: Response) => {
+    const { serviceType, serviceId } = req.params;
+
+    const Model = SERVICE_MODELS[serviceType.toLowerCase()];
+    if (!Model) {
+      return res.status(400).json({ message: "Invalid service type" });
+    }
+
+    // Update the service in DB
+    const updatedService = await Model.findByIdAndUpdate(serviceId, req.body, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!updatedService) {
+      return res.status(404).json({ message: "Service not found" });
+    }
+
+    // 🧹 Clear Redis cache for all pages of this user & serviceType
+    const userId = updatedService.userId?.toString();
+    const pattern = `${serviceType}:*user${userId || "any"}:*`;
+
+    try {
+      const keys = await redis.keys(pattern);
+      if (keys.length > 0) {
+        await redis.del(...keys);
+        console.log("Deleted Redis cache keys:", keys);
+      }
+    } catch (err) {
+      console.warn("Redis cache deletion error:", err);
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Service updated successfully",
+      updatedService,
+    });
+  }
+);
+
+
+
+
+
+
+export const viewSingleServiceTypeandId = CatchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { serviceType, serviceId } = req.params;
 
+      // ✅ Validate ObjectId
+      if (!mongoose.Types.ObjectId.isValid(serviceId)) {
+        return res.status(400).json({ message: "Invalid service ID" });
+      }
+
+      // ✅ Get Mongoose model from serviceType
       const Model = SERVICE_MODELS[serviceType.toLowerCase()];
-      if (!Model) return res.status(400).json({ message: "Invalid service type" });
+      if (!Model) {
+        return res.status(400).json({ message: "Invalid service type" });
+      }
 
-      const updatedService = await Model.findByIdAndUpdate(
-        serviceId,
-        { $set: req.body },
-        { new: true }
-      );
+      // ✅ Check Redis cache
+      const cacheKey = `view:${serviceType}:${serviceId}`;
+      const cached = await redis.get(cacheKey);
+      if (cached) {
+        return res
+          .status(200)
+          .json({ service: JSON.parse(cached), cached: true });
+      }
 
-      if (!updatedService) {
+      // ✅ Fetch from DB
+      const service = await Model.findById(serviceId);
+      if (!service) {
         return res.status(404).json({ message: "Service not found" });
       }
 
-      return res.status(200).json({ updatedService });
+      // ✅ Store in Redis
+      await redis.set(cacheKey, JSON.stringify(service), "EX", 60 * 60); // 1 hour cache
+
+      return res.status(200).json({ service });
     } catch (error: any) {
-      console.error("Error in update:", error);
+      console.error("❌ Error in viewSingleServiceTypeandId:", error);
       return next(new ErrorHandler(error.message, 500));
     }
-});
-
-
-
-
-
-  export const viewSingleServiceTypeandId = CatchAsyncError(
-    async (req: Request, res: Response, next: NextFunction) => {
-        try {
-          const { serviceType, serviceId } = req.params;
-
-          if (!mongoose.Types.ObjectId.isValid(serviceId)) {
-            return res.status(400).json({ message: "Invalid service ID" });
-          }
-
-          const Model = SERVICE_MODELS[serviceType.toLowerCase()];
-          if (!Model) {
-            return res.status(400).json({ message: "Invalid service type" });
-          }
-
-          const service = await Model.findById(serviceId);
-          if (!service) {
-            return res.status(404).json({ message: "Service not found" });
-          }
-
-          return res.status(200).json({ service });
-        } catch (error: any) {
-          console.error("Error in viewSingleService:", error);
-          return next(new ErrorHandler(error.message, 500));
-        }
-    }
-  );
-
+  }
+);
 
 
   export const deleteServiceTypeandId = CatchAsyncError(
@@ -198,6 +231,16 @@ export const updateServiceTypeandId=CatchAsyncError(
           return res.status(404).json({ message: "Service not found" });
         }
 
+        // 🧹 Clear Redis cache related to this serviceType and user
+        const userId = deleted.userId?.toString();
+        const pattern = `${serviceType}:*user${userId || "any"}:*`;
+
+        const keys = await redis.keys(pattern);
+        if (keys.length > 0) {
+          await redis.del(...keys);
+          console.log("🗑️ Deleted cache keys after delete:", keys);
+        }
+
         return res
           .status(200)
           .json({ message: "Service deleted successfully" });
@@ -207,7 +250,7 @@ export const updateServiceTypeandId=CatchAsyncError(
       }
     }
   );
-
+  
 
 
 
@@ -215,33 +258,52 @@ export const updateServiceTypeandId=CatchAsyncError(
   //toogle all services
 
 
-export const toggleAvailability = CatchAsyncError(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const { serviceType, serviceId } = req.params;
+  export const toggleServiceField = CatchAsyncError(
+    async (req: Request, res: Response, next: NextFunction) => {
+      const { serviceType, serviceId, field } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(serviceId)) {
-      return next(new ErrorHandler("Invalid service ID", 400));
+      if (!mongoose.Types.ObjectId.isValid(serviceId)) {
+        return next(new ErrorHandler("Invalid service ID", 400));
+      }
+
+      const Model = SERVICE_MODELS[serviceType.toLowerCase()];
+      if (!Model) {
+        return next(new ErrorHandler("Invalid service type", 400));
+      }
+
+      const allowedFields = ["isAvailable", "lead"];
+      if (!allowedFields.includes(field)) {
+        return next(new ErrorHandler("Invalid toggle field", 400));
+      }
+
+      const service = await Model.findById(serviceId);
+      if (!service) {
+        return next(new ErrorHandler("Service not found", 404));
+      }
+
+      // ✅ Toggle the field value
+      service[field] = !service[field];
+      await service.save({ validateBeforeSave: false });
+
+      // ✅ Delete Redis cache (view cache specifically)
+      const cacheKey = `view:${serviceType}:${serviceId}`;
+      await redis.del(cacheKey);
+
+      return res.status(200).json({
+        success: true,
+        message: `${field} toggled for ${serviceType} (${service._id})`,
+        serviceId: service._id,
+        [field]: service[field],
+      });
     }
+  );
+  
 
-    const Model = SERVICE_MODELS[serviceType.toLowerCase()];
-    if (!Model) return next(new ErrorHandler("Invalid service type", 400));
 
-    const provider = await Model.findById(serviceId);
-    if (!provider) return next(new ErrorHandler("Provider not found", 404));
 
-    provider.isAvailable = !provider.isAvailable;
-    await provider.save({ validateBeforeSave: false });
 
-    res.status(200).json({
-      success: true,
-      message: `${serviceType} (${provider._id}) is now ${
-        provider.isAvailable ? "available" : "unavailable"
-      }`,
-      serviceId: provider._id,
-      isAvailable: provider.isAvailable,
-    });
-  }
-);
+
+
 
 
 //approval
