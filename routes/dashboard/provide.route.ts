@@ -7,13 +7,17 @@ import {
   getOrderById,
 } from "../../controllers/order/order.controller";
 import userRouter from "../user.route";
-import { deleteServiceTypeandId, searchServicesByType, toggleAvailability, updateServiceTypeandId, viewSingleServiceTypeandId } from "../../controllers/dashboard/allservices.controller";
+import { deleteServiceTypeandId, getAllServicesQuery,  toggleAvailability, updateServiceTypeandId, viewSingleServiceTypeandId } from "../../controllers/dashboard/allservices.controller";
 
 const dashboardRouter=express.Router();
 
 
 
-dashboardRouter.get("/all",searchServicesByType);
+
+
+
+
+dashboardRouter.get("/allServices", getAllServicesQuery);
 
 
 

@@ -197,3 +197,6 @@ doctorRoute.delete("/d/:doctorId/review/:userId/:userType", deleteDoctorReview);
 doctorRoute.post("/d/appointments", createAppointment)
 
 export default doctorRoute;
+
+
+

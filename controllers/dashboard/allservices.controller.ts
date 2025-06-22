@@ -29,27 +29,28 @@ const SERVICE_MODELS: Record<string, any> = {
 };
 
 
-export const searchServicesByType= CatchAsyncError(
-    async(
-  req: Request,
-  res: Response,
-  next: NextFunction
-) =>{
-  try {
-    const {
-      q,
-      lat,
-      lng,
-      page = "1",
-      limit = "16",
-      userId,
-      serviceType,
-    } = req.query;
+
+  
 
 
 
-    console.log(`search dashboard req.parmas ${userId} and serviceType ${serviceType}`)
-    // Validate inputs
+
+
+//all services by servicesId and serviceType
+export const getAllServicesQuery = CatchAsyncError(
+  async (req: Request, res: Response) => {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 5;
+    const skip = (page - 1) * limit;
+
+    const userId = req.query.userId as string;
+    const serviceType = req.query.serviceType as string;
+    const search = (req.query.search as string)?.trim();
+    const sortBy = (req.query.sortBy as string) || "createdAt";
+    const order = req.query.order === "asc" ? 1 : -1;
+    const filterByDate = req.query.filterByDate as string;
+
+    // Validate
     if (!serviceType || typeof serviceType !== "string") {
       return res.status(400).json({ message: "Service type is required" });
     }
@@ -59,82 +60,68 @@ export const searchServicesByType= CatchAsyncError(
       return res.status(400).json({ message: "Invalid service type" });
     }
 
-    const searchTerm = typeof q === "string" && q.trim() ? q.trim() : null;
-    const latNum = lat ? Number(lat) : null;
-    const lngNum = lng ? Number(lng) : null;
-    const pageNum = Math.max(Number(page), 1);
-    const limitNum = Math.max(Number(limit), 1);
-    const skip = (pageNum - 1) * limitNum;
-    const hasGeo =
-      latNum != null && lngNum != null && !isNaN(latNum) && !isNaN(lngNum);
+    const filter: any = {};
 
-    const cacheKey = `${serviceType}:${searchTerm || "all"}:${lat || "0"}:${
-      lng || "0"
-    }:user${userId || "any"}:page${pageNum}:limit${limitNum}`;
+    // Filter by userId
+    if (userId) {
+      filter.userId = new mongoose.Types.ObjectId(userId);
+    }
+
+    // Filter by search on serviceName (case-insensitive)
+    if (search) {
+      filter.serviceName = { $regex: search, $options: "i" };
+    }
+
+    // Filter by lastMonth date
+    if (filterByDate === "lastMonth") {
+      const oneMonthAgo = new Date();
+      oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+      filter.createdAt = { $gte: oneMonthAgo };
+    }
+
+    const cacheKey = `${serviceType}:${search || "all"}:user${
+      userId || "any"
+    }:page${page}:limit${limit}`;
     const cached = await redis.get(cacheKey);
+
     if (cached) {
       const parsed = JSON.parse(cached);
       return res.status(200).json({ ...parsed, cached: true });
     }
 
-    const basePipeline: any[] = [];
+    try {
+      const services = await Model.find(filter)
+        .sort({ [sortBy]: order })
+        .skip(skip)
+        .limit(limit);
 
-  
+      const total = await Model.countDocuments(filter);
 
-    if (userId) {
-      basePipeline.push({
-        $match: { userId: new mongoose.Types.ObjectId(userId as string) },
+      // Cache result
+      await redis.set(
+        cacheKey,
+        JSON.stringify({
+          services,
+          total,
+          totalPages: Math.ceil(total / limit),
+          page,
+        }),
+        "EX",
+        60 * 60 * 3 // 3 hours
+      );
+
+      res.status(200).json({
+        services,
+        total,
+        totalPages: Math.ceil(total / limit),
+        page,
       });
+    } catch (error) {
+      console.error("Error in getAllServicesQuery:", error);
+      res.status(500).json({ message: "Failed to fetch services", error });
     }
-
-    if (searchTerm) {
-      basePipeline.push({
-        $match: {
-          $or: [
-            { serviceName: { $regex: searchTerm, $options: "i" } },
-            { category: { $regex: searchTerm, $options: "i" } },
-            { description: { $regex: searchTerm, $options: "i" } },
-          ],
-        },
-      });
-    }
-
-   
-  
-    const countPipeline = [...basePipeline, { $count: "total" }];
-    const countResult = await Model.aggregate(countPipeline);
-    const total = countResult[0]?.total || 0;
-    const totalPages = Math.ceil(total / limitNum);
-
-    const paginatedPipeline = [
-      ...basePipeline,
-      { $skip: skip },
-      { $limit: limitNum },
-    ];
-    const results = await Model.aggregate(paginatedPipeline);
-
-    console.log(`result it after query`,results)
-    await redis.set(
-      cacheKey,
-      JSON.stringify({ services: results, total, totalPages, page: pageNum }),
-      "EX",
-      60 *5
-    );
-
-    return res.status(200).json({
-      services: results,
-      total,
-      totalPages,
-      page: pageNum,
-      cached: false,
-    });
-  } catch (error: any) {
-    console.error("❌ Search Services Error:", error);
-    return next(new ErrorHandler(error.message, 500));
   }
-})
-  
-
+);
 
 
 
@@ -162,33 +149,10 @@ export const updateServiceTypeandId=CatchAsyncError(
       console.error("Error in update:", error);
       return next(new ErrorHandler(error.message, 500));
     }
-  });
+});
 
 
 
-  export const deleteServiceTypeandId = CatchAsyncError(
-    async (req: Request, res: Response, next: NextFunction) => {
-        try {
-          const { serviceType, serviceId } = req.params;
-
-          const Model = SERVICE_MODELS[serviceType.toLowerCase()];
-          if (!Model)
-            return res.status(400).json({ message: "Invalid service type" });
-
-          const deleted = await Model.findByIdAndDelete(serviceId);
-          if (!deleted) {
-            return res.status(404).json({ message: "Service not found" });
-          }
-
-          return res
-            .status(200)
-            .json({ message: "Service deleted successfully" });
-        } catch (error: any) {
-          console.error("Error in delete:", error);
-          return next(new ErrorHandler(error.message, 500));
-        }
-    }
-  );
 
 
   export const viewSingleServiceTypeandId = CatchAsyncError(
@@ -220,7 +184,29 @@ export const updateServiceTypeandId=CatchAsyncError(
 
 
 
+  export const deleteServiceTypeandId = CatchAsyncError(
+    async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        const { serviceType, serviceId } = req.params;
 
+        const Model = SERVICE_MODELS[serviceType.toLowerCase()];
+        if (!Model)
+          return res.status(400).json({ message: "Invalid service type" });
+
+        const deleted = await Model.findByIdAndDelete(serviceId);
+        if (!deleted) {
+          return res.status(404).json({ message: "Service not found" });
+        }
+
+        return res
+          .status(200)
+          .json({ message: "Service deleted successfully" });
+      } catch (error: any) {
+        console.error("Error in delete:", error);
+        return next(new ErrorHandler(error.message, 500));
+      }
+    }
+  );
 
 
 
