@@ -38,24 +38,31 @@ export const sendOTP = async (req: Request, res: Response) => {
     }
 
     // Generate a 4-digit OTP
-    const otp = Math.floor(1000 + Math.random() * 9000); // Generates between 1000 and 9999
+    const otp = Math.floor(1000 + Math.random() * 9000);
 
-    // Optionally store it in DB for verification later (e.g., in user.otp or a separate collection)
-    user.otp = otp;
-    user.otpExpire = new Date(Date.now() + 5 * 60 * 1000); // 5 min expiry
+    // Save OTP with expiry
+    user.otp = otp.toString();;
+    user.otpExpire = new Date(Date.now() + 10 * 60 * 1000); // 10 min expiry
     await user.save();
 
     // Prepare SMS text
-    const smsText = `Your OTP to verify your account is ${otp}. Do not share it with anyone. - URONIN`;
+    // const smsText = `Dear customer, your OTP for login is ${otp}. Please do not share this OTP with anyone. It is valid for 10 minutes. Regards YBLT Services Pvt Ltd`;
 
-    // Send SMS
-   const res= await sendSMS(phone, smsText);
-    console.log(`sms otp is and ${otp}`,res);
-    // Respond
+    // ✅ Call sendSMS safely
+    // const smsResult = await sendSMS(phone, smsText);
+    // console.log(`sms otp is ${otp}, smsResult:`, smsResult);
+
+    // if (!smsResult) {
+    //   return res.status(500).json({ message: "Failed to send OTP via SMS" });
+    // }
+
+    console.log(`your msg is `,otp);
+
+    // Respond with success
     return res.status(200).json({
       success: true,
       message: `OTP sent to ${phone}`,
-      otp, // ❗ Remove this in production — shown here only for testing
+      otp, // ❗ for dev only
     });
   } catch (error: any) {
     console.error("OTP send error:", error.message);
@@ -67,60 +74,64 @@ export const sendOTP = async (req: Request, res: Response) => {
 // controllers/patient/auth.controller.ts
 
 export const verifyOTP = async (req: Request, res: Response) => {
-    const { otp } = req.body;
-    const phone = req.headers["x-phone"] as string;
-  
-    // if (!phone || !otp) {
-    //   return res.status(400).json({ message: "Phone and OTP are required" });
-    // }
-  
-    try {
-      // Let Twilio Verify check the code
-      console.log(`otp is `, otp);
-      const verificationCheck = await twilioClient.verify.v2
-        .services(process.env.TWILIO_VERIFY_SERVICE_SID!)
-        .verificationChecks.create({ to: phone, code: otp });
+  try {
+    const { phone, otp } = req.body;
 
-      if (verificationCheck.status !== "approved") {
-        return res.status(400).json({ message: "Invalid OTP" });
-      }
-
-      // OTP is valid; find user
-      const user = await userModel.findOne({ phone });
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-
-      // After OTP is approved and you have `user`:
-      const token = generateToken(user._id.toString());
-
-      // Store session in Redis (so isAuthenticated sees it)
-      await redis.set(user._id, JSON.stringify(user), "EX", 7 * 24 * 60 * 60); // 7 days
-
-      // Set the cookie exactly as your loginUser flow does:
-      res.cookie("access_token", token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production", // false in dev
-        sameSite: "lax",
-        path: "/",
-        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-      });
-
-      // Return user info to frontend
-      return res.status(200).json({
-        message: "Login successful",
-        user: {
-          _id: user._id,
-          name: user.name,
-          phone: user.phone,
-          role: user.role,
-        },
-      });
-    } catch (err: any) {
-      return res
-        .status(500)
-        .json({ message: "OTP verification failed", error: err });
+    if (!phone || !otp) {
+      return res.status(400).json({ message: "Phone and OTP are required" });
     }
-  };
+
+    const user = await userModel.findOne({ phone });
+
+    console.log(`user is verify otp `,user);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Check if OTP is correct
+    if (user.otp?.toString() !== otp.toString()) {
+      return res.status(400).json({ message: "Invalid OTP" });
+    }
+
+    // Check if OTP is expired
+    if (user.otpExpire && user.otpExpire < new Date()) {
+      return res.status(400).json({ message: "OTP expired" });
+    }
+
+    // ✅ OTP is valid – generate token
+    const token = generateToken(user._id.toString());
+
+    // Store session in Redis
+    await redis.set(
+      user._id.toString(),
+      JSON.stringify(user),
+      "EX",
+      7 * 24 * 60 * 60
+    ); // 7 days
+
+    // Set cookie
+    res.cookie("access_token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+    });
+
+    return res.status(200).json({
+      message: "Login successful",
+      user: {
+        _id: user._id,
+        name: user.name,
+        phone: user.phone,
+        role: user.role,
+      },
+    });
+  } catch (err: any) {
+    console.error("OTP verification failed:", err);
+    return res.status(500).json({ message: "OTP verification failed" });
+  }
+};
   
   

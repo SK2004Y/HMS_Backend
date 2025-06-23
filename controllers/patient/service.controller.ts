@@ -5,7 +5,7 @@ import { GymService } from "../../modals/gym.modal.ts/services.modal";
 import { RadiologyService } from "../../modals/radiology.modal.ts/services.modal";
 import { HospitalService } from "../../modals/hospital.modal/services.modal";
 import { ResortService } from "../../modals/resort.modal/services.modal";
-import { AmbulanceService, AmbulanceVehicle } from "../../modals/ambulance.modal/services.modal";
+import {  AmbulanceVehicle } from "../../modals/ambulance.modal/services.modal";
 import { PharmacyService } from "../../modals/medicine.modal/services.modal";
 import { ClinicService } from "../../modals/clinic.modal/service.modal";
 import ErrorHandler from "../../utils/ErrorHandler";
@@ -163,7 +163,7 @@ export const getAllServices = async (req: Request, res: Response) => {
       DoctorService.aggregate(buildPipeline(useGeo)).then((docs) =>
         docs.map((doc) => ({ ...doc, serviceType: "doctor" }))
       ),
-      AmbulanceService.aggregate(buildPipeline(useGeo)).then((docs) =>
+      AmbulanceVehicle.aggregate(buildPipeline(useGeo)).then((docs) =>
         docs.map((doc) => ({ ...doc, serviceType: "ambulance" }))
       ),
       DiagnosticService.aggregate(buildPipeline(useGeo)).then((docs) =>
@@ -209,6 +209,9 @@ export const getAllServices = async (req: Request, res: Response) => {
       "EX",
       60 * 60 * 4
     );
+
+
+    console.log(`getAllservices data is `,allServices);
 
     return res.status(200).json({
       success: true,

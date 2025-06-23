@@ -70,6 +70,7 @@ app.use(
       "https://www.uronhealth.in",
       "https://www.provideruron.com",
       "http://localhost:3000",
+      "http://localhost:3001",
       "http://192.168.31.252:3000",
       "http://192.168.31.253:3000",
     ],

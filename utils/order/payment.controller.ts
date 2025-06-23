@@ -196,5 +196,35 @@ export const verifyPayment = async (req: Request, res: Response) => {
 
 
 
+//booking details via booking id 
+export const getBookingById = async (req: Request, res: Response) => {
+  try {
+    const { bookingId } = req.params;
+    if (!bookingId) {
+      return res.status(400).json({ message: "bookingId is required" });
+    }
+
+    const booking = await bookingModal.findById(bookingId);
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
+
+    
+    res.json({ booking });
+  } catch (err) {
+    console.error("Error fetching booking:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+
+
+
+
+
+
+
+
+
 
 

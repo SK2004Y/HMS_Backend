@@ -79,6 +79,7 @@ const userSchema: Schema<IUser> = new mongoose.Schema(
         "radiology",
         "ambulance",
         "admin",
+        "clinic"
       ],
     },
     isVerified: {
@@ -87,7 +88,7 @@ const userSchema: Schema<IUser> = new mongoose.Schema(
     },
     otp: {
       type: String,
-      select: false,
+      // select: false,
     },
     otpExpire: Date,
     resetPasswordToken: String,

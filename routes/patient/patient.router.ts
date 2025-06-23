@@ -7,7 +7,7 @@ import { get } from "http"
 
 import { NotificationModel } from "../../modals/notifications/notification.modal"
 import { sendNotification } from "../../socket/event.handle"
-import { bookService, verifyPayment } from "../../utils/order/payment.controller"
+import { bookService, getBookingById, verifyPayment } from "../../utils/order/payment.controller"
 import {createRazorpayOrder}  from "../../utils/order/payment.controller"
 
 const PatientRouter= express.Router()
@@ -57,7 +57,7 @@ PatientRouter.post(
 
 PatientRouter.post("/verify-order",updateAccessToken,isAuthneticated,verifyPayment);
 
-
+PatientRouter.get("/booking-details/:bookingId",updateAccessToken,isAuthneticated,getBookingById);
 
 
 
