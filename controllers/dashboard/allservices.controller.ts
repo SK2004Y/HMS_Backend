@@ -107,7 +107,7 @@ export const getAllServicesQuery = CatchAsyncError(
           page,
         }),
         "EX",
-        60*1 // 3 hours
+        60*1 // 
       );
 
       console.log(`hitted query with `,services);

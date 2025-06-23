@@ -5,7 +5,7 @@ import { GymService } from "../../modals/gym.modal.ts/services.modal";
 import { RadiologyService } from "../../modals/radiology.modal.ts/services.modal";
 import { HospitalService } from "../../modals/hospital.modal/services.modal";
 import { ResortService } from "../../modals/resort.modal/services.modal";
-import { AmbulanceService } from "../../modals/ambulance.modal/services.modal";
+import { AmbulanceService, AmbulanceVehicle } from "../../modals/ambulance.modal/services.modal";
 import { PharmacyService } from "../../modals/medicine.modal/services.modal";
 import { ClinicService } from "../../modals/clinic.modal/service.modal";
 import ErrorHandler from "../../utils/ErrorHandler";
@@ -13,6 +13,7 @@ import express, { NextFunction, Request, Response } from "express";
 import { redis } from "../../utils/redis";
 import { PathologyService } from "../../modals/pathology.modal/services.modal";
 import { ProfessionalService } from "../../modals/professional.modal/service.modal";
+import bookingModal from "../../modals/booking/booking.modal";
 //patient services get pay for it
 export const SingleDoctorService = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -898,3 +899,16 @@ export const getServiceByTypeAndId = async (
     return next(new ErrorHandler(error.message, 500));
   }
 };
+
+
+
+
+
+
+
+
+
+
+
+
+

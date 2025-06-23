@@ -2,11 +2,13 @@ import express, {Request,Response} from "express"
 import { Router } from "express"
 import { isAuthneticated } from "../../middleware/auth"
 import { updateAccessToken } from "../../controllers/user.controller"
-import {  AllDoctorServices,  getAllServices, getServiceByTypeAndId, searchServices, searchServicesClinic, searchServicesRadiology, searchServicesResort,  SingleDoctorService,  } from "../../controllers/patient/service.controller"
+import {  AllDoctorServices,    getAllServices, getServiceByTypeAndId, searchServices, searchServicesClinic, searchServicesRadiology, searchServicesResort,  SingleDoctorService,  } from "../../controllers/patient/service.controller"
 import { get } from "http"
 
 import { NotificationModel } from "../../modals/notifications/notification.modal"
 import { sendNotification } from "../../socket/event.handle"
+import { bookService, verifyPayment } from "../../utils/order/payment.controller"
+import {createRazorpayOrder}  from "../../utils/order/payment.controller"
 
 const PatientRouter= express.Router()
 
@@ -41,7 +43,19 @@ PatientRouter.get("/clinicServices/p",searchServicesClinic);
 PatientRouter.get("/doctorService/:id",SingleDoctorService);
 
 
+//booking 
+PatientRouter.post("/book",updateAccessToken,isAuthneticated, bookService);
 
+PatientRouter.post(
+  "/create-order",
+  updateAccessToken,
+  isAuthneticated,
+  createRazorpayOrder
+);
+
+
+
+PatientRouter.post("/verify-order",updateAccessToken,isAuthneticated,verifyPayment);
 
 
 
