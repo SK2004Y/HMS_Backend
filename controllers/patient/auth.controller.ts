@@ -46,15 +46,15 @@ export const sendOTP = async (req: Request, res: Response) => {
     await user.save();
 
     // Prepare SMS text
-    // const smsText = `Dear customer, your OTP for login is ${otp}. Please do not share this OTP with anyone. It is valid for 10 minutes. Regards YBLT Services Pvt Ltd`;
+    const smsText = `Dear customer, your OTP for login is ${otp}. Please do not share this OTP with anyone. It is valid for 10 minutes. Regards YBLT Services Pvt Ltd`;
 
     // ✅ Call sendSMS safely
-    // const smsResult = await sendSMS(phone, smsText);
-    // console.log(`sms otp is ${otp}, smsResult:`, smsResult);
+    const smsResult = await sendSMS(phone, smsText);
+    console.log(`sms otp is ${otp}, smsResult:`, smsResult);
 
-    // if (!smsResult) {
-    //   return res.status(500).json({ message: "Failed to send OTP via SMS" });
-    // }
+    if (!smsResult) {
+      return res.status(500).json({ message: "Failed to send OTP via SMS" });
+    }
 
     console.log(`your msg is `,otp);
 
