@@ -572,8 +572,8 @@ export const forgetPassword = CatchAsyncError(
 
     await user.save({ validateBeforeSave: false });
 
-    // const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
-    const resetUrl="after frontend build then send the data";
+    const resetUrl = `${process.env.CLIENT_URL}services/resetpassword/${resetToken}`;
+    // const resetUrl="after frontend build then send the data";
 
     // Prepare template data
     const data = {

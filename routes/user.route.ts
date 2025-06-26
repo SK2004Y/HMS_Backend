@@ -57,6 +57,8 @@ userRouter.put("/update-user-info", isAuthneticated,updateUserInfo);
 userRouter.put("/update-user-password", isAuthneticated,updatePassword);
 
 
+
+
 userRouter.post("/reset-password",forgetPassword);
 userRouter.post("/reset-set-password", resetPassword);
 
