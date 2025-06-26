@@ -124,6 +124,10 @@ export const getAllServices = async (req: Request, res: Response) => {
     const cachedData = await redis.get(cacheKey);
     if (cachedData) {
       const parsed = JSON.parse(cachedData as string); // 👈 safely parse
+
+      console.log(`redis fetch `,parsed.services.length);
+      console.log(`redis fetch radiology `, parsed.services.radiologies);
+
       return res.status(200).json({
         success: true,
         total: parsed.services.length,
@@ -189,6 +193,10 @@ export const getAllServices = async (req: Request, res: Response) => {
       ),
     ]);
 
+
+    console.log(`doctor length `,doctors.length);
+    console.log(`radiology length `, radiologies.length);
+
     // ✅ Merge into one combined array
     const allServices = [
       ...doctors,
@@ -207,7 +215,7 @@ export const getAllServices = async (req: Request, res: Response) => {
       cacheKey,
       JSON.stringify({ services: allServices }),
       "EX",
-      60 * 60 * 4
+      60 * 4
     );
 
 
