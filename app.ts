@@ -34,6 +34,7 @@ import ResortRoute from './routes/resort/resort.route';
 import PatientRouter from './routes/patient/patient.router';
 import ClinicRoute from './routes/clinic/clinic.route';
 import dashboardRouter from './routes/dashboard/provide.route';
+import adminrouter from './routes/admin/medicineShopAdmin.route';
 
 // import { reportRouter } from './routes/patient-report.router';
 
@@ -84,7 +85,7 @@ app.use(
 
 
 //routes
-
+app.use("/api/vs/admin",adminrouter);
 app.use("/api/vs",userRouter);
 app.use("/api/vs",doctorRouter);
 app.use("/api/vs",PatientRouter);

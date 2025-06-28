@@ -3,35 +3,15 @@ import {
   getAllMedicineShopsAdmin,
   approveMedicineShop,
   deleteMedicineShopAdmin,
+  getProfileTypeSummary,
+  getProfilesByTypeWithFilters,
 } from "../../controllers//admin/medicineShopAdmin.controller";
 import { isAuthneticated, authorizeRoles } from "../../middleware/auth";
 
-const router = express.Router();
+const adminrouter = express.Router();
 
-// Admin protected routes
-router.get(
-  "/medicine-shops",
-  isAuthneticated,
-  // authorizeRoles("admin"),
-  getAllMedicineShopsAdmin
-);
-router.put(
-  "/medicine-shop/approve/:id",
-  isAuthneticated,
-  authorizeRoles("admin"),
-  approveMedicineShop
-);
+adminrouter.get("/get-overview",getProfileTypeSummary);
+adminrouter.get("/get-specific",getProfilesByTypeWithFilters);
 
 
-
-
-router.delete(
-  "/medicine-shop/:id",
-  isAuthneticated,
-  authorizeRoles("admin"),
-  deleteMedicineShopAdmin
-);
-
-
-
-export default router;
+export default adminrouter;

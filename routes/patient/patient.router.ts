@@ -9,8 +9,18 @@ import { NotificationModel } from "../../modals/notifications/notification.modal
 import { sendNotification } from "../../socket/event.handle"
 import { bookService, getBookingById, verifyPayment } from "../../utils/order/payment.controller"
 import {createRazorpayOrder}  from "../../utils/order/payment.controller"
+import { getPatientProfileByUserId, updatePatientProfile } from "../../controllers/patient/profile.controller"
 
 const PatientRouter= express.Router()
+
+
+//patient profile 
+PatientRouter.get("/patient-profile/:userId", getPatientProfileByUserId);
+
+
+PatientRouter.post("/patient-profile-updated",updatePatientProfile)
+
+
 
 
 //doctor 

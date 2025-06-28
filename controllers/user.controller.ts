@@ -619,6 +619,7 @@ export const resetPassword = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     const { token, newPassword } = req.body as IResetPasswordRequest;
 
+    console.log(`token and password`,token,newPassword)
     if (!token || !newPassword) {
       return next(new ErrorHandler("Token and new password are required", 400));
     }

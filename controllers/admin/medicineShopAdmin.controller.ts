@@ -1,135 +1,200 @@
 import { Request, Response, NextFunction } from "express";
-import { MedicineModel} from "../../modals/medicineshop.model";
+
 import { CatchAsyncError } from "../../middleware/catchAsyncErrors";
 import ErrorHandler from "../../utils/ErrorHandler";
+import userModel from "../../modals/user_model"
 
-// Admin: Get all medicine shops (with optional search/filter)
-export const getAllMedicineShopsAdmin = CatchAsyncError(
+import { ResortProfile } from "../../modals/resort.modal/profile.modal";
+import { DiagnosticProfile } from "../../modals/diagnosis.modal/diagnosisProfile.modal";
+import { AmbulanceProfile } from "../../modals/ambulance.modal/profile.modal";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//adming for dashboard to see user all details 
+// controllers/adminController.ts
+
+
+
+
+
+
+
+
+
+
+//adming overview 
+
+const profileModels = [
+  { type: "resort", model: ResortProfile },
+  { type: "diagnosis", model: DiagnosticProfile },
+  { type: "ambulance", model: AmbulanceProfile },
+];
+
+export const getProfileTypeSummary = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
-    const shops = await MedicineModel.find();
+    const { name, startDate, endDate } = req.query;
+
+    // Optional name filter (user search)
+    const userFilters: any = {};
+    if (name) {
+      userFilters.name = { $regex: name as string, $options: "i" };
+    }
+
+    // Optional date range
+    if (startDate || endDate) {
+      userFilters.createdAt = {};
+      if (startDate) userFilters.createdAt.$gte = new Date(startDate as string);
+      if (endDate) userFilters.createdAt.$lte = new Date(endDate as string);
+    }
+
+    // Fetch matched users
+    const users = await userModel.find(userFilters).select("_id isVerified");
+
+    const userMap = new Map<string, boolean>();
+    users.forEach((user) => userMap.set(user._id.toString(), user.isVerified));
+
+    const result = [];
+
+    for (const { type, model } of profileModels) {
+      const profiles = await model.find({});
+
+      let total = 0;
+      let verified = 0;
+      let notVerified = 0;
+
+      for (const profile of profiles) {
+        const userId = profile.userId.toString();
+        if (!userMap.has(userId)) continue;
+
+        total++;
+        if (userMap.get(userId)) {
+          verified++;
+        } else {
+          notVerified++;
+        }
+      }
+
+      result.push({
+        profileType: type,
+        total,
+        verified,
+        notVerified,
+      });
+    }
+
     res.status(200).json({
       success: true,
-      count: shops.length,
-      shops,
+      summary: result,
     });
   }
 );
 
 
-// 2. Get All Medicine Shops (With Search, Filter, Pagination)
-export const getAllMedicineShops = CatchAsyncError(
-  async (req: Request, res: Response) => {
-    let query = MedicineModel.find();
 
-    // const allshops= await query?.length;
 
-    // Search
-    if (req.query.search) {
-      const keyword = req.query.search as string;
-      query = query.find({ name: { $regex: keyword, $options: "i" } });
+
+
+//view services details 
+
+export const getProfilesByTypeWithFilters = CatchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const {
+      type,
+      name,
+      startDate,
+      endDate,
+      isVerified,
+      page = "1",
+      limit = "10",
+    } = req.query;
+
+    
+
+    const pageNum = parseInt(page as string);
+    const limitNum = parseInt(limit as string);
+    const skip = (pageNum - 1) * limitNum;
+    let selectedType =
+      typeof type === "object" && type !== null ? (type as any).type : type;
+
+    if (!selectedType || !profileModels[selectedType as string]) {
+      return res.status(400).json({ success: false, message: "Invalid type" });
     }
 
-    // Filter by city
-    if (req.query.city) {
-      const city = req.query.city as string;
-      query = query.find({ "location.city": { $regex: city, $options: "i" } });
+    const Model = profileModels[selectedType as string];
+    console.log(`invalid type received selectedtype `,selectedType);
+    // Build user filter
+    const userFilter: any = {};
+
+    if (name) {
+      userFilter.name = { $regex: name as string, $options: "i" };
+    }
+    if (startDate || endDate) {
+      userFilter.createdAt = {};
+      if (startDate) userFilter.createdAt.$gte = new Date(startDate as string);
+      if (endDate) userFilter.createdAt.$lte = new Date(endDate as string);
+    }
+    if (isVerified !== undefined) {
+      userFilter.isVerified = isVerified === "true";
     }
 
-    // Filter by isApproved
-    if (req.query.isApproved) {
-      query = query.find({ isApproved: req.query.isApproved === "true" });
-    }
-    // Filter by geolocation (latitude, longitude, and radius in km)
-    if (req.query.lat && req.query.lng && req.query.radius) {
-      const lat = parseFloat(req.query.lat as string);
-      const lng = parseFloat(req.query.lng as string);
-      const radius = parseFloat(req.query.radius as string);
+    // Find matching users
+    const users = await userModel
+      .find(userFilter)
+      .select("_id name email isVerified");
+    const userIdMap = new Map<string, any>();
+    users.forEach((u) => userIdMap.set(u._id.toString(), u));
 
-      // Convert radius from kilometers to radians
-      const earthRadiusKm = 6378.1;
-      const radiusInRadians = radius / earthRadiusKm;
+    // Fetch profiles
+    const profiles = await Model.find({
+      userId: { $in: users.map((u) => u._id) },
+    })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limitNum);
 
-      query = query.find({
-        location: {
-          $geoWithin: {
-            $centerSphere: [[lng, lat], radiusInRadians],
-          },
-        },
-      });
-    }
-    // Pagination
-    const page = Number(req.query.page) || 1;
-    const limit = Number(req.query.limit) || 10;
-    const skip = (page - 1) * limit;
+    const total = await Model.countDocuments({
+      userId: { $in: users.map((u) => u._id) },
+    });
 
-    const total = await MedicineModel.countDocuments(query.getFilter());
-    const shops = await query.skip(skip).limit(limit);
+    const profilesWithUser = profiles.map((profile) => ({
+      ...profile.toObject(),
+      user: userIdMap.get(profile.userId.toString()),
+    }));
 
     res.status(200).json({
       success: true,
       total,
-      page,
-      limit,
-      shops,
-    });
-  }
-);
-
-// Admin: Approve/Disapprove a medicine shop
-export const approveMedicineShop = CatchAsyncError(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const shop = await MedicineModel.findById(req.params.id);
-
-    console.log(`approveshop is ${shop}`);
-    if (!shop) {
-      return next(new ErrorHandler("Medicine shop not found", 404));
-    }
-
-    shop.status = req.body.status; // status can be "Approved" or "Disapproved"
-    await shop.save();
-
-    res.status(200).json({
-      success: true,
-      message: `Medicine Shop ${req.body.status} successfully`,
+      page: pageNum,
+      totalPages: Math.ceil(total / limitNum),
+      profiles: profilesWithUser,
     });
   }
 );
 
 
-// Admin: Get counts of shops (pending, approved, disapproved)
-export const getMedicineShopStats = CatchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
-  const totalShops = await MedicineModel.countDocuments();
-  const approvedShops = await MedicineModel.countDocuments({ isApproved: true });
-  const pendingShops = await MedicineModel.countDocuments({ isApproved: false, status: "active" });
-  const inactiveShops = await MedicineModel.countDocuments({ status: "inactive" });
-
-  res.status(200).json({
-    success: true,
-    stats: {
-      totalShops,
-      approvedShops,
-      pendingShops,
-      inactiveShops,
-    },
-  });
-});
-
-
-
-// Admin: Delete a medicine shop
-export const deleteMedicineShopAdmin = CatchAsyncError(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const shop = await MedicineModel.findById(req.params.id);
-
-    if (!shop) {
-      return next(new ErrorHandler("Medicine shop not found", 404));
-    }
-
-    await shop.deleteOne();
-
-    res.status(200).json({
-      success: true,
-      message: "Medicine Shop deleted successfully",
-    });
-  }
-);
