@@ -923,3 +923,264 @@ export const getServiceByTypeAndId = async (
 
 
 
+
+
+//mobile individuals services query
+
+export const AllClinic = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const cacheKey = "all_clinic_services";
+
+    // ✅ Check Redis first
+    const cached = await redis.get(cacheKey);
+    if (cached) {
+      return res.status(200).json({
+        success: true,
+        service: JSON.parse(cached),
+        cached: true,
+      });
+    }
+
+    // 🔎 Fetch from DB
+    const service = await ClinicService.find();
+
+    if (!service || service.length === 0) {
+      return next(new ErrorHandler("Service not found", 404));
+    }
+
+    // 💾 Store in Redis for 4 hours
+    await redis.set(cacheKey, JSON.stringify(service), "EX", 60 *  10); //20mint
+
+    res.status(200).json({ success: true, service, cached: false });
+  } catch (error: any) {
+    return next(new ErrorHandler(error.message, 500));
+  }
+};
+
+
+
+//diagnostic services
+export const AllDiagnostic = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const cacheKey = "all_diagnostic_services";
+
+    // ✅ Check Redis first
+    const cached = await redis.get(cacheKey);
+    if (cached) {
+      return res.status(200).json({
+        success: true,
+        service: JSON.parse(cached),
+        cached: true,
+      });
+    }
+
+    // 🔎 Fetch from DB
+    const service = await DiagnosticService.find();
+
+    if (!service || service.length === 0) {
+      return next(new ErrorHandler("Service not found", 404));
+    }
+
+    // 💾 Store in Redis for 4 hours
+    await redis.set(cacheKey, JSON.stringify(service), "EX", 60 * 20); //20mint
+
+    res.status(200).json({ success: true, service, cached: false });
+  } catch (error: any) {
+    return next(new ErrorHandler(error.message, 500));
+  }
+};
+
+
+
+//resort services
+export const AllResort = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const cacheKey = "all_resort_services";
+
+    // ✅ Check Redis first
+    const cached = await redis.get(cacheKey);
+    if (cached) {
+      return res.status(200).json({
+        success: true,
+        service: JSON.parse(cached),
+        cached: true,
+      });
+    }
+
+    // 🔎 Fetch from DB
+    const service = await ResortService.find();
+
+    if (!service || service.length === 0) {
+      return next(new ErrorHandler("Service not found", 404));
+    }
+
+    // 💾 Store in Redis for 4 hours
+    await redis.set(cacheKey, JSON.stringify(service), "EX", 60 * 20); //20mint
+
+    res.status(200).json({ success: true, service, cached: false });
+  } catch (error: any) {
+    return next(new ErrorHandler(error.message, 500));
+  }
+};
+
+//Radiology services
+export const AllRadiology = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const cacheKey = "all_Radiology_services";
+
+    // ✅ Check Redis first
+    const cached = await redis.get(cacheKey);
+    if (cached) {
+      return res.status(200).json({
+        success: true,
+        service: JSON.parse(cached),
+        cached: true,
+      });
+    }
+
+    // 🔎 Fetch from DB
+    const service = await RadiologyService.find();
+
+    if (!service || service.length === 0) {
+      return next(new ErrorHandler("Service not found", 404));
+    }
+
+    // 💾 Store in Redis for 4 hours
+    await redis.set(cacheKey, JSON.stringify(service), "EX", 60 * 20); //20mint
+
+    res.status(200).json({ success: true, service, cached: false });
+  } catch (error: any) {
+    return next(new ErrorHandler(error.message, 500));
+  }
+};
+
+
+
+
+//Pathology services
+export const AllPathology= async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const cacheKey = "all_pathology_services";
+
+    // ✅ Check Redis first
+    const cached = await redis.get(cacheKey);
+    if (cached) {
+      return res.status(200).json({
+        success: true,
+        service: JSON.parse(cached),
+        cached: true,
+      });
+    }
+
+    // 🔎 Fetch from DB
+    const service = await PathologyService.find();
+
+    if (!service || service.length === 0) {
+      return next(new ErrorHandler("Service not found", 404));
+    }
+
+    // 💾 Store in Redis for 4 hours
+    await redis.set(cacheKey, JSON.stringify(service), "EX", 60 * 20); //20mint
+
+    res.status(200).json({ success: true, service, cached: false });
+  } catch (error: any) {
+    return next(new ErrorHandler(error.message, 500));
+  }
+};
+
+
+//practitioner services
+export const AllPractitioner = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const cacheKey = "all_practitioner_services";
+
+    // ✅ Check Redis first
+    const cached = await redis.get(cacheKey);
+    if (cached) {
+      return res.status(200).json({
+        success: true,
+        service: JSON.parse(cached),
+        cached: true,
+      });
+    }
+
+    // 🔎 Fetch from DB
+    const service = await ProfessionalService.find();
+
+    if (!service || service.length === 0) {
+      return next(new ErrorHandler("Service not found", 404));
+    }
+
+    // 💾 Store in Redis for 4 hours
+    await redis.set(cacheKey, JSON.stringify(service), "EX", 60 * 20); //20mint
+
+    res.status(200).json({ success: true, service, cached: false });
+  } catch (error: any) {
+    return next(new ErrorHandler(error.message, 500));
+  }
+};
+
+
+
+//pharmacy services
+export const AllPharmacy = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const cacheKey = "all_pharmacy_services";
+
+    // ✅ Check Redis first
+    const cached = await redis.get(cacheKey);
+    if (cached) {
+      return res.status(200).json({
+        success: true,
+        service: JSON.parse(cached),
+        cached: true,
+      });
+    }
+
+    // 🔎 Fetch from DB
+    const service = await PharmacyService.find();
+
+    if (!service || service.length === 0) {
+      return next(new ErrorHandler("Service not found", 404));
+    }
+
+    // 💾 Store in Redis for 4 hours
+    await redis.set(cacheKey, JSON.stringify(service), "EX", 60 * 20); //20mint
+
+    res.status(200).json({ success: true, service, cached: false });
+  } catch (error: any) {
+    return next(new ErrorHandler(error.message, 500));
+  }
+};
+
+
+
+

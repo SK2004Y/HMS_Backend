@@ -25,16 +25,17 @@ const generateToken = (userId: string) => {
 
 export const sendOTP = async (req: Request, res: Response) => {
   try {
-    const { phone, name } = req.body;
+    const { phone } = req.body;
+    console.log(`send otp phone is  hitted`,phone);
 
-    if (!phone || !name) {
+    if (!phone ) {
       return res.status(400).json({ message: "Phone and name are required" });
     }
 
     // Find or create user
     let user = await userModel.findOne({ phone });
     if (!user) {
-      user = await userModel.create({ name, phone, role: "patient" });
+      user = await userModel.create({ phone, role: "patient" });
     }
 
     // Generate a 4-digit OTP
@@ -46,7 +47,7 @@ export const sendOTP = async (req: Request, res: Response) => {
     await user.save();
 
     // Prepare SMS text
-    const smsText = `Dear customer, your OTP for login is ${otp}. Please do not share this OTP with anyone. It is valid for 10 minutes. Regards YBLT Services Pvt Ltd`;
+    const smsText = `Dear customer, your OTP for login is ${otp}. Please do not share this OTP with anyone. It is valid for 10 minutes. Regards YBLT Services Pvt Ltds`;
 
     // ✅ Call sendSMS safely
     const smsResult = await sendSMS(phone, smsText);
@@ -73,8 +74,20 @@ export const sendOTP = async (req: Request, res: Response) => {
 
 // controllers/patient/auth.controller.ts
 
+
+
+export const generateRefreshToken = (userId: string) => {
+  return jwt.sign({ id: userId }, process.env.REFRESH_TOKEN || "", {
+    expiresIn: "7d",
+  });
+};
+
+
 export const verifyOTP = async (req: Request, res: Response) => {
   try {
+    console.log(`verify otp is hitted`);
+
+
     const { phone, otp } = req.body;
 
     if (!phone || !otp) {
@@ -83,13 +96,16 @@ export const verifyOTP = async (req: Request, res: Response) => {
 
     const user = await userModel.findOne({ phone });
 
-    console.log(`user is verify otp `,user);
+    console.log(`user is verify otp `, user);
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
     // Check if OTP is correct
+    console.log(`user otp is `, user.otp);
+    console.log(`otp is `, otp);
+
     if (user.otp?.toString() !== otp.toString()) {
       return res.status(400).json({ message: "Invalid OTP" });
     }
@@ -99,8 +115,12 @@ export const verifyOTP = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "OTP expired" });
     }
 
+
+
+    
     // ✅ OTP is valid – generate token
     const token = generateToken(user._id.toString());
+    const refreshToken = generateRefreshToken(user._id.toString());
 
     // Store session in Redis
     await redis.set(
@@ -119,6 +139,15 @@ export const verifyOTP = async (req: Request, res: Response) => {
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
     });
 
+   const isProduction = process.env.NODE_ENV === "production";
+
+   res.cookie("refreshToken", refreshToken, {
+     httpOnly: true,
+    
+     sameSite: isProduction ? "none" : "lax",
+     secure: isProduction,
+   });
+
     return res.status(200).json({
       message: "Login successful",
       user: {
@@ -127,6 +156,8 @@ export const verifyOTP = async (req: Request, res: Response) => {
         phone: user.phone,
         role: user.role,
       },
+      accessToken: token,
+      refreshToken: refreshToken, // Include refresh token in response
     });
   } catch (err: any) {
     console.error("OTP verification failed:", err);

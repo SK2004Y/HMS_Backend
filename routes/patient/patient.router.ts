@@ -2,7 +2,7 @@ import express, {Request,Response} from "express"
 import { Router } from "express"
 import { isAuthneticated } from "../../middleware/auth"
 import { updateAccessToken } from "../../controllers/user.controller"
-import {  AllDoctorServices,    getAllServices, getServiceByTypeAndId, searchServices, searchServicesClinic, searchServicesRadiology, searchServicesResort,  SingleDoctorService,  } from "../../controllers/patient/service.controller"
+import {  AllClinic, AllDiagnostic, AllDoctorServices,    AllPathology,    AllPharmacy,    AllPractitioner,    AllRadiology,    AllResort,    getAllServices, getServiceByTypeAndId, searchServices, searchServicesClinic, searchServicesRadiology, searchServicesResort,  SingleDoctorService,  } from "../../controllers/patient/service.controller"
 import { get } from "http"
 
 import { NotificationModel } from "../../modals/notifications/notification.modal"
@@ -147,6 +147,17 @@ PatientRouter.post("/noti/:id", async (req: Request, res: Response) => {
 
 
 
+
+
+//mobile services 
+
+PatientRouter.get("/services/clinic",AllClinic);
+PatientRouter.get("/services/diagnostic", AllDiagnostic);
+PatientRouter.get("/services/resort",AllResort);
+PatientRouter.get("/services/radiology",AllRadiology);
+PatientRouter.get("/services/pathology",AllPathology);
+PatientRouter.get("/services/practitioner",AllPractitioner);
+PatientRouter.get("/services/pharmacy",AllPharmacy);
 
 
 

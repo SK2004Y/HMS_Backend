@@ -69,6 +69,7 @@ app.use(
     origin: [
       
       "https://www.uronhealth.in",
+      "exp://192.168.208.191:8081",
       "https://www.provideruron.com",
       "http://localhost:3000",
       "http://localhost:3001",
@@ -89,6 +90,7 @@ app.use("/api/vs/admin",adminrouter);
 app.use("/api/vs",userRouter);
 app.use("/api/vs",doctorRouter);
 app.use("/api/vs",PatientRouter);
+app.use("/api/vs/patient",patientRouter);
 app.use("/api/vs/patient",reportRouter);
 app.use("/api/vs/doctor", reports);
 app.use("/api/vs/appointment",appointmentRouter)

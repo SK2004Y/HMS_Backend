@@ -10,7 +10,7 @@ dotenv.config();
  * @param message - Message text to send
  * @returns Promise resolving with SMS API response
  */
-// export const sendSMS = async (phone: string, message: string) => {
+
 //   try {
 //     const response = await axios.get(
 //       "https://www.smsgatewayhub.com/api/mt/SendSMS",
