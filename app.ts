@@ -106,11 +106,11 @@ app.use("/api/vs/diagnostic",diaRouter)
 
 app.use("/api/vs/gym",GymRoute);
 app.use("/api/vs/diagnosis",diagnosisRouter)
-app.use("/api/vs/hospital",HospitalRoute);
+app.use("/api/vs",HospitalRoute);
 app.use("/api/vs/medicine",MedicineRoute);
 app.use("/api/vs/ambulance",AmbulanceRoute);
-app.use("/api/vs/radiology",RadiologyRoute);
-app.use("/api/vs/resort",ResortRoute);
+app.use("/api/vs",RadiologyRoute);
+app.use("/api/vs",ResortRoute);
 app.use("/api/vs/clinic",ClinicRoute);
 app.use("/api/vs/dashboard",dashboardRouter);
 

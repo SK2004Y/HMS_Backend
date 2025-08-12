@@ -10,12 +10,7 @@ const HospitalRoute = express.Router();
 
 
 
-//create doctor profile 
 
-// doctorRoute.post('/d-create-profile',createDoctorProfile);
-
-
-// import multer from "multer";
 import { parseFormData } from '../../middleware/formPaser';
 
 import { createAppointment } from "../../controllers/chats/appointment.controller";
@@ -27,12 +22,55 @@ import { createHospitalService } from '../../controllers/Hospital/services.contr
 
 
 //all profileform handler 
-HospitalRoute.get("/check-profile",updateAccessToken,isAuthneticated,handleProfile);
+HospitalRoute.get(
+  "/hospital/check-profile",
+  updateAccessToken,
+  isAuthneticated,
+  handleProfile
+);
+
+//create hospital profile
 HospitalRoute.post(
-  "/create-profile",
+  "/hospital/create-profile",
   updateAccessToken,
   isAuthneticated,
   authorizeRoles("hospital"),
+  upload.single("avatar"),
+  // 👈 middleware to parse stringified JSON
+  createHospitalProfile
+);
+
+
+//create Clinic profile
+HospitalRoute.post(
+  "/clinic/create-profile",
+  updateAccessToken,
+  isAuthneticated,
+  authorizeRoles("clinic"),
+  upload.single("avatar"),
+  // 👈 middleware to parse stringified JSON
+  createHospitalProfile
+);
+
+//create E_Clinic profile
+HospitalRoute.post(
+  "/E_Clinic/create-profile",
+  updateAccessToken,
+  isAuthneticated,
+  authorizeRoles("E_Clinic"),
+  upload.single("avatar"),
+  // 👈 middleware to parse stringified JSON
+  createHospitalProfile
+);
+
+
+
+//create Practitioner profile
+HospitalRoute.post(
+  "/practitioner/create-profile",
+  updateAccessToken,
+  isAuthneticated,
+  authorizeRoles("practitioner"),
   upload.single("avatar"),
   // 👈 middleware to parse stringified JSON
   createHospitalProfile

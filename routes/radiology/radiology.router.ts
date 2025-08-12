@@ -30,13 +30,14 @@ import { createPathologyService } from '../../controllers/pathology/service.cont
 
 //all profileform handler 
 RadiologyRoute.get(
-  "/check-profile",
+  "/radiology/check-profile",
   updateAccessToken,
   isAuthneticated,
   handleProfile
 );
+
 RadiologyRoute.post(
-  "/create-profile",
+  "/radiology/create-profile",
   updateAccessToken,
   isAuthneticated,
   authorizeRoles("radiology"),
@@ -44,6 +45,23 @@ RadiologyRoute.post(
   // 👈 middleware to parse stringified JSON
   createRadiologyProfile
 );
+
+
+//create Pathology profile
+RadiologyRoute.post(
+  "/pathology/create-profile",
+  updateAccessToken,
+  isAuthneticated,
+  authorizeRoles("pathology"),
+  upload.single("avatar"),
+  // 👈 middleware to parse stringified JSON
+  createRadiologyProfile
+);
+
+
+
+
+
 
 
 

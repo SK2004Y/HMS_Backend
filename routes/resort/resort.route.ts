@@ -24,19 +24,30 @@ import { createResortService, createTourService } from '../../controllers/resort
 
 //all profileform handler 
 ResortRoute.get(
-  "/check-profile",
+  "/resort/check-profile",
   updateAccessToken,
   isAuthneticated,
   handleProfile
 );
 ResortRoute.post(
-  "/create-profile",
+  "/resort/create-profile",
   updateAccessToken,
   isAuthneticated,
   authorizeRoles("resort"),
   upload.single("avatar"),
-  // 👈 middleware to parse stringified JSON
-createResortProfile
+
+  createResortProfile
+);
+
+//wellness tour profile creation 
+ResortRoute.post(
+  "/wellness/create-profile",
+  updateAccessToken,
+  isAuthneticated,
+  authorizeRoles("wellness"),
+  upload.single("avatar"),
+
+  createResortProfile
 );
 
 

@@ -72,14 +72,21 @@ const userSchema: Schema<IUser> = new mongoose.Schema(
         "patient",
         "doctor",
         "gym",
-        "diagnostic",
+        "diagnosis",
         "hospital",
+        "clinic",
+        "E_Clinic",
+        "practitioner",
         "medicine",
+        "pharmacy",
         "resort",
+        "wellnessCenter",
         "radiology",
+        "pathology",
+
         "ambulance",
         "admin",
-        "clinic"
+        
       ],
     },
     isVerified: {
