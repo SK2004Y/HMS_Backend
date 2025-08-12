@@ -220,11 +220,11 @@ export const activationUser = CatchAsyncError(
 
       const existUser = await userModel.findOne({ email });
 
-      const existphone=await userModel.findOne({phone});
+      // const existphone=await userModel.findOne({phone});
 
-      if(existphone){
-        return next(new ErrorHandler("Mobile Number already exist",400));
-      }
+      // if(existphone){
+      //   return next(new ErrorHandler("Mobile Number already exist",400));
+      // }
 
       if (existUser) {
         return next(new ErrorHandler("Email already exist", 400));
