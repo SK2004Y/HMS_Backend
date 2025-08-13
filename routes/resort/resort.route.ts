@@ -2,6 +2,9 @@ import express, { Response, Request, NextFunction } from 'express'
 
 import { isAuthneticated, authorizeRoles } from '../../middleware/auth';
 
+import { checkIsVerified } from '../../middleware/auth';
+
+
 const ResortRoute = express.Router();
 
 
@@ -52,7 +55,14 @@ ResortRoute.post(
 
 
 //services
-ResortRoute.post("/create-service",upload.any(),createResortService);
+ResortRoute.post(
+  "/resort/create-service",
+  isAuthneticated,
+  authorizeRoles("resort"),
+  checkIsVerified,
+  upload.any(),
+  createResortService
+);
 
 
 // updateAccessToken,

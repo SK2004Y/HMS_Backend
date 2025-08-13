@@ -1,7 +1,7 @@
 import express, { Response, Request, NextFunction } from 'express'
 
 
-import { isAuthneticated, authorizeRoles } from '../../middleware/auth';
+import { isAuthneticated, authorizeRoles, checkIsVerified } from '../../middleware/auth';
 
 const ClinicRoute = express.Router();
 
@@ -69,6 +69,7 @@ ClinicRoute.post(
   "/create-service",
   updateAccessToken,
   isAuthneticated,
+  checkIsVerified,
   upload.any(), // handles multiple image uploads under 'files' field
   createClinicService
 );
@@ -88,6 +89,7 @@ ClinicRoute.post(
   "/create-service-hospital",
   updateAccessToken,
   isAuthneticated,
+ checkIsVerified,
   upload.any(), // handles multiple image uploads under 'files' field
  createHospitalService
 );

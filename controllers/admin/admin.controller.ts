@@ -182,3 +182,41 @@ export const deleteUser = async (req:Request, res:Response) => {
 };
 
 
+
+
+// 🗑️ Delete User and All Their Services
+
+
+// import RadiologyService from "../../modals/radiology.modal.ts/services.modal";
+// import ambulanceModel from "../models/ambulanceModel";
+// import diagnosisModel from "../models/diagnosisModel";
+// import resortModel from "../models/resortModel";
+
+// export const deleteUser = async (req: Request, res: Response) => {
+//   try {
+//     const { userId } = req.params;
+
+//     // 1️⃣ Find and delete the user
+//     const user = await userModel.findByIdAndDelete(userId);
+
+//     if (!user) {
+//       return res.status(404).json({ success: false, message: "User not found" });
+//     }
+
+//     // 2️⃣ Delete all services created by this user
+//     await Promise.all([
+//       radiologyModel.deleteMany({ userId }),
+//       ambulanceModel.deleteMany({ userId }),
+//       diagnosisModel.deleteMany({ userId }),
+//       resortModel.deleteMany({ userId }),
+//     ]);
+
+//     res.status(200).json({
+//       success: true,
+//       message: "User and all related services deleted successfully",
+//     });
+//   } catch (error) {
+//     console.error("Delete User Error:", error);
+//     res.status(500).json({ success: false, message: "Server Error" });
+//   }
+// };

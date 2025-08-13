@@ -1,7 +1,7 @@
 import express, { Response, Request, NextFunction } from 'express'
 
 
-import { isAuthneticated, authorizeRoles } from '../../middleware/auth';
+import { isAuthneticated, authorizeRoles, checkIsVerified } from '../../middleware/auth';
 
 const RadiologyRoute = express.Router();
 
@@ -83,9 +83,11 @@ RadiologyRoute.post(
 
 
 RadiologyRoute.post(
-  "/create-service",
+  "/radiology/create-service",
   updateAccessToken,
   isAuthneticated,
+  checkIsVerified,
+  authorizeRoles("radiology"),
   upload.single("avatar"),
   createRadiologyService
 );
@@ -94,9 +96,11 @@ RadiologyRoute.post(
 
 //pathology services
 RadiologyRoute.post(
-  "/create-service-pathology",
+  "/pathology/create-service",
   updateAccessToken,
   isAuthneticated,
+  checkIsVerified,
+  authorizeRoles("pathology"),
   upload.single("avatar"),
   createPathologyService
 );

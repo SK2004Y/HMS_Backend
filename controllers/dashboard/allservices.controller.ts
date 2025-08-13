@@ -128,13 +128,100 @@ export const getAllServicesQuery = CatchAsyncError(
 
 
 
+// export const updateServiceTypeandId = CatchAsyncError(
+//   async (req: Request, res: Response) => {
+//     const { serviceType, serviceId } = req.params;
+//     console.log(`Updating service ${serviceType} with ID ${serviceId}`, req.body);
+
+//     const Model = SERVICE_MODELS[serviceType.toLowerCase()];
+//     if (!Model) {
+//       return res.status(400).json({ message: "Invalid service type" });
+//     }
+
+//     // Update the service in DB
+//     const updatedService = await Model.findByIdAndUpdate(serviceId, req.body, {
+//       new: true,
+//       runValidators: true,
+//     });
+
+//     if (!updatedService) {
+//       return res.status(404).json({ message: "Service not found" });
+//     }
+
+//     // 🧹 Clear Redis cache for all pages of this user & serviceType
+//     const userId = updatedService.userId?.toString();
+//     const pattern = `${serviceType}:*user${userId || "any"}:*`;
+
+//     try {
+//       const keys = await redis.keys(pattern);
+//       if (keys.length > 0) {
+//         await redis.del(...keys);
+//         console.log("Deleted Redis cache keys:", keys);
+//       }
+//     } catch (err) {
+//       console.warn("Redis cache deletion error:", err);
+//     }
+
+//     res.status(200).json({
+//       success: true,
+//       message: "Service updated successfully",
+//       updatedService,
+//     });
+//   }
+// );
+
+
+
+
+
+
+
+
+
+
+
+
+//2nd
+
 export const updateServiceTypeandId = CatchAsyncError(
   async (req: Request, res: Response) => {
     const { serviceType, serviceId } = req.params;
+    console.log(
+      `Updating service ${serviceType} with ID ${serviceId}`,
+      req.body
+    );
 
     const Model = SERVICE_MODELS[serviceType.toLowerCase()];
     if (!Model) {
       return res.status(400).json({ message: "Invalid service type" });
+    }
+
+    // 🛠 Only process location for types that have it (e.g., resort)
+    if (req.body.location && serviceType.toLowerCase() === "resort") {
+      try {
+        const parsed =
+          typeof req.body.location === "string"
+            ? JSON.parse(req.body.location)
+            : req.body.location;
+
+        const lon = parseFloat(parsed.coordinates?.[0]);
+        const lat = parseFloat(parsed.coordinates?.[1]);
+
+        if (!isNaN(lon) && !isNaN(lat)) {
+          req.body.location = {
+            type: "Point",
+            coordinates: [lon, lat],
+            city: parsed.city || "",
+            state: parsed.state || "",
+            pincode: parsed.pincode || "",
+            landmark: parsed.landmark || "",
+          };
+        } else {
+          delete req.body.location; // ❌ remove invalid
+        }
+      } catch (err) {
+        delete req.body.location; // ❌ remove if parsing fails
+      }
     }
 
     // Update the service in DB
@@ -168,7 +255,6 @@ export const updateServiceTypeandId = CatchAsyncError(
     });
   }
 );
-
 
 
 
@@ -221,6 +307,7 @@ export const viewSingleServiceTypeandId = CatchAsyncError(
     async (req: Request, res: Response, next: NextFunction) => {
       try {
         const { serviceType, serviceId } = req.params;
+      
 
         const Model = SERVICE_MODELS[serviceType.toLowerCase()];
         if (!Model)
