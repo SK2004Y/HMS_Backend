@@ -70,13 +70,9 @@ app.use(
       "https://www.uronhealth.in",
       "exp://192.168.208.191:8081",
       "https://www.provideruron.com",
-      "http://localhost:3000",
-      "http://localhost:3001",
-      "http://192.168.25.191:3000",
-      "http://192.168.199.191:3000",
-      "http://192.168.31.253:3000",
+   
 
-      "https://admin-uronhealth.vercel.app/",
+      "https://admin-uronhealth.vercel.app",
     ],
 
     credentials: true,
