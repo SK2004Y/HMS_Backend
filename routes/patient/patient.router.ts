@@ -9,7 +9,7 @@ import { NotificationModel } from "../../modals/notifications/notification.modal
 import { sendNotification } from "../../socket/event.handle"
 import { bookService, getBookingById, verifyPayment } from "../../utils/order/payment.controller"
 import {createRazorpayOrder}  from "../../utils/order/payment.controller"
-import { getPatientProfileByUserId, updatePatientProfile } from "../../controllers/patient/profile.controller"
+import { createPatientProfile, getPatientProfileByUserId, updatePatientProfile } from "../../controllers/patient/profile.controller"
 
 const PatientRouter= express.Router()
 
@@ -159,6 +159,10 @@ PatientRouter.get("/services/pathology",AllPathology);
 PatientRouter.get("/services/practitioner",AllPractitioner);
 PatientRouter.get("/services/pharmacy",AllPharmacy);
 
+
+
+
+PatientRouter.post("/patient/create-profile",  isAuthneticated,updateAccessToken,createPatientProfile);
 
 
 

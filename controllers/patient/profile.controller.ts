@@ -7,7 +7,7 @@ import ErrorHandler from "../../utils/ErrorHandler";
 export const createPatientProfile = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      console.log("API hit: createDoctorProfile");
+     
       console.log("Request Body:", req.body);
       console.log("File:", req.file);
       let avatarData = {
