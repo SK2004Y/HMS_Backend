@@ -125,54 +125,141 @@ interface IActivationRequest {
   activation_code: string;
 }
 
+// export const activationUser = CatchAsyncError(
+//   async (req: Request, res: Response, next: NextFunction) => {
+//     try {
+//       console.log(`activated hit `,req.body)
+//       const { activation_token, activation_code } =
+//         req.body as IActivationRequest;
+//       const newUser: { user: IUser; activationCode: string } = jwt.verify(
+//         activation_token,
+//         process.env.ACTIVATION_SECRET as string
+//       ) as { user: IUser; activationCode: string };
+
+//       if (newUser.activationCode !== activation_code) {
+//         return next(new ErrorHandler("Invalid activation code ", 400));
+//       }
+
+//       const { phone, email, password,role} = newUser.user;
+
+//       const existUser = await userModel.findOne({ email });
+
+//       // const existphone=await userModel.findOne({phone});
+
+//       // if(existphone){
+//       //   return next(new ErrorHandler("Mobile Number already exist",400));
+//       // }
+
+//       if (existUser) {
+//         return next(new ErrorHandler("Email already exist", 400));
+//       }
+
+//       const user = await userModel.create({
+//         phone,
+//         email,
+//         password,
+//         role,
+//       });
+
+//       res.status(201).json({
+//         success: true,
+//         message:"activated your account please login "
+//       });
+//     } catch (error: any) {
+//       return next(new ErrorHandler(error.message, 400));
+//     }
+//   }
+// );
+
+
+
+//LOGIN USER
+
+
+//2nd
 export const activationUser = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      console.log(`activated hit `,req.body)
+      console.log("activation hit", req.body);
+
       const { activation_token, activation_code } =
         req.body as IActivationRequest;
-      const newUser: { user: IUser; activationCode: string } = jwt.verify(
+
+      // verify token
+      const decoded = jwt.verify(
         activation_token,
         process.env.ACTIVATION_SECRET as string
       ) as { user: IUser; activationCode: string };
 
-      if (newUser.activationCode !== activation_code) {
-        return next(new ErrorHandler("Invalid activation code ", 400));
+      if (!decoded) {
+        return next(new ErrorHandler("Invalid activation token", 400));
       }
 
-      const { phone, email, password,role} = newUser.user;
-
-      const existUser = await userModel.findOne({ email });
-
-      // const existphone=await userModel.findOne({phone});
-
-      // if(existphone){
-      //   return next(new ErrorHandler("Mobile Number already exist",400));
-      // }
-
-      if (existUser) {
-        return next(new ErrorHandler("Email already exist", 400));
+      // validate activation code
+      if (decoded.activationCode !== activation_code) {
+        return next(new ErrorHandler("Invalid activation code", 400));
       }
 
-      const user = await userModel.create({
-        phone,
-        email,
-        password,
-        role,
-      });
+      // extract and normalize user payload
+      const { phone, email, password, role } = decoded.user;
+      const normalizedPhone = phone ? String(phone).trim() : undefined;
+      const normalizedEmail = email
+        ? String(email).trim().toLowerCase()
+        : undefined;
+
+      // check duplicate email only if email provided
+      if (normalizedEmail) {
+        const existByEmail = await userModel
+          .findOne({ email: normalizedEmail })
+          .lean();
+        if (existByEmail) {
+          return next(new ErrorHandler("Email already exists", 400));
+        }
+      }
+
+      // check duplicate phone only if phone provided (this avoids creating phone: null)
+      if (normalizedPhone) {
+        const existByPhone = await userModel
+          .findOne({ phone: normalizedPhone })
+          .lean();
+        if (existByPhone) {
+          return next(new ErrorHandler("Mobile number already exists", 400));
+        }
+      }
+
+      // build payload without null/undefined fields to avoid inserting phone: null
+      const createPayload: Partial<IUser> = {
+        ...(normalizedEmail && { email: normalizedEmail }),
+        ...(normalizedPhone && { phone: normalizedPhone }),
+        ...(password && { password }),
+        ...(role && { role }),
+      };
+
+      // create user (assumes pre-save hooks on schema handle password hashing)
+      const user = await userModel.create(createPayload);
 
       res.status(201).json({
         success: true,
-        message:"activated your account please login "
+        message: "Account activated. Please login.",
+        // optionally return minimal user info (avoid returning sensitive data)
       });
-    } catch (error: any) {
-      return next(new ErrorHandler(error.message, 400));
+    } catch (err: any) {
+      // handle JWT-specific errors more gracefully
+      if (
+        err &&
+        (err.name === "JsonWebTokenError" || err.name === "TokenExpiredError")
+      ) {
+        return next(
+          new ErrorHandler("Invalid or expired activation token", 400)
+        );
+      }
+      // log error server side for debugging
+      console.error("activationUser error:", err);
+      return next(new ErrorHandler(err.message || "Activation failed", 400));
     }
   }
 );
 
-
-//LOGIN USER
 
 interface ILoginRequest {
   email: string;
