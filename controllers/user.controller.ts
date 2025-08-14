@@ -75,7 +75,7 @@ export const registrationUser = CatchAsyncError(
       }
 
       // Prepare SMS text
-      const smsText = `Dear customer, your OTP for login is ${activationCode}. Please do not share this OTP with anyone. It is valid for 10 minutes. Regards YBLT Services Pvt Ltd`;
+      const smsText = `Dears customer, your OTP for login is ${activationCode}. Please do not share this OTP with anyone. It is valid for 10 minutes. Regards YBLT Services Pvt Ltd`;
 
       // ✅ Call sendSMS safely
       const smsResult = await sendSMS(phone, smsText);
