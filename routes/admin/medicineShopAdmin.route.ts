@@ -6,6 +6,7 @@ import {
 } from "../../controllers//admin/medicineShopAdmin.controller";
 import { isAuthneticated, authorizeRoles, checkIsVerified, getServiceProviderStatS, getTotalServices } from "../../middleware/auth";
 import { approveUser, deapproveUser, deleteUser, getAllUsers, getUserWithProfile } from "../../controllers/admin/admin.controller";
+import { updateAccessToken } from "../../controllers/user.controller";
 
 const adminrouter = express.Router();
 
@@ -16,17 +17,42 @@ const adminrouter = express.Router();
 //    authorizeRoles("admin"),
    adminrouter.get(
      "/users",
-    //  isAuthneticated,
-    //  authorizeRoles("admin"),
+     updateAccessToken,
+     isAuthneticated,
+     authorizeRoles("admin"),
      getAllUsers
    );
-adminrouter.get("/users/:userId", getUserWithProfile);
+adminrouter.get(
+  "/users/:userId",
+  updateAccessToken,
+  isAuthneticated,
+  authorizeRoles("admin"),
+  getUserWithProfile
+);
 
 
 
-adminrouter.put("/approve/:userId",approveUser);
-adminrouter.put("/deapprove/:userId",deapproveUser);
-adminrouter.delete("/delete/:userId",deleteUser);
+adminrouter.put(
+  "/approve/:userId",
+  updateAccessToken,
+  isAuthneticated,
+  authorizeRoles("admin"),
+  approveUser
+);
+adminrouter.put(
+  "/deapprove/:userId",
+  updateAccessToken,
+  isAuthneticated,
+  authorizeRoles("admin"),
+  deapproveUser
+);
+adminrouter.delete(
+  "/delete/:userId",
+  updateAccessToken,
+  isAuthneticated,
+  authorizeRoles("admin"),
+  deleteUser
+);
 
 
 

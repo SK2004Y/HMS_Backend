@@ -22,7 +22,7 @@ import { updateAccessToken } from "../../controllers/user.controller";
 import { handleProfile } from "../../utils/handler/handler.controller";
 import { createHospitalProfile } from '../../controllers/Hospital/profile.controller';
 import { createResortProfile } from '../../controllers/resort/profile.controller';
-import { createResortService, createTourService } from '../../controllers/resort/service.controller';
+import { createResortService, createTourService, createWellnessTourService } from '../../controllers/resort/service.controller';
 
 
 //all profileform handler 
@@ -57,6 +57,7 @@ ResortRoute.post(
 //services
 ResortRoute.post(
   "/resort/create-service",
+  updateAccessToken,
   isAuthneticated,
   authorizeRoles("resort"),
   checkIsVerified,
@@ -65,15 +66,19 @@ ResortRoute.post(
 );
 
 
-// updateAccessToken,
-  // isAuthneticated,
-  //tour servivces
+//tour services ||wellness Tour  services
 
   ResortRoute.post(
-    "/tour/create-service",
+    "/resort/tour/create-service",
     updateAccessToken,
-    createTourService
+    isAuthneticated,
+    authorizeRoles("wellness"),
+    checkIsVerified,
+    upload.any(),
+    createWellnessTourService
   );
+
+
 
 
 

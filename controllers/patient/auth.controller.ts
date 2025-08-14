@@ -47,7 +47,7 @@ export const sendOTP = async (req: Request, res: Response) => {
     await user.save();
 
     // Prepare SMS text
-    const smsText = `Dear customer, your OTP for login is ${otp}. Please do not share this OTP with anyone. It is valid for 10 minutes. Regards YBLT Services Pvt Ltds`;
+    const smsText = `Dear customer, your OTP for login is ${otp}. Please do not share this OTP with anyone. It is valid for 10 minutes. Regards YBLT Services Pvt Ltd`;
 
     // ✅ Call sendSMS safely
     const smsResult = await sendSMS(phone, smsText);

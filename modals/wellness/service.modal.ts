@@ -2,39 +2,50 @@ import mongoose,{Document,Schema,Types} from "mongoose";
 
 //services interface
 
-export interface IDiagnosticServices {
+export interface IResortServices {
   userId: mongoose.Types.ObjectId;
+  category: string;
+  roomTypes?: string[];
+  acRoomPrice?: number;
+  nonAcRoomPrice?: number;
   serviceName: string;
-  fee: number;
+  price: number;
+  priceDays: number;
   estimatedPrice?: number;
-  image?: {
-    url: string;
-    public_id: string;
-  };
-  mode: string;
-  isAvailable: boolean;
-  lead:boolean,
-  duration?: string;
+  image?: [
+    {
+      url: string;
+      public_id: string;
+    }
+  ];
+  video?: [
+    {
+      url: string;
+      public_id: string;
+    }
+  ];
   description: string;
   reviews?: IReview;
   socialLink?: [ISocialLink];
+  isAvailable?: boolean;
+  lead?: boolean;
   location?: {
     type: "Point";
-    coordinates: [number, number];
+    coordinates?: [number, number];
     city?: string;
     state?: string;
     pincode?: string;
-    address: string;
-    landmark: string;
+    address?: string;
+    landmark?: string;
   };
-  serviceType?: string; // e.g., "Consultation", "Surgery", etc.
+  serviceType?: string;
 }
 
 //review interface
 export interface IReview {
   userId: mongoose.Types.ObjectId;
-  userType?: "Patient" | "Doctor";
-  rating?: number;
+  userType: "Patient" | "Doctor";
+  rating: number;
   comment?: string;
   createdAt?: Date;
 }
@@ -70,36 +81,66 @@ export const socialLinkSchema = new Schema<ISocialLink>(
 );
 
 
-const diagnosticServiceSchema = new Schema<IDiagnosticServices>(
+const resortServiceSchema = new Schema<IResortServices>(
   {
     userId: {
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
+    category: {
+      type: String,
+    },
+    roomTypes: [
+      {
+        type: String,
+      },
+    ],
+    acRoomPrice: {
+      type: Number,
+    },
+    nonAcRoomPrice: {
+      type: Number,
+    },
     serviceName: {
       type: String,
       required: [true, "please enter a service name"],
     },
-    fee: {
+    price: {
       type: Number,
-      required: [true, "please enter a service price "],
+    },
+    priceDays: {
+      type: Number,
     },
     estimatedPrice: {
       type: Number,
     },
-    image: {
-      url: {
-        type: String,
+    image: [
+      {
+        url: {
+          type: String,
+        },
+        public_id: {
+          type: String,
+        },
       },
-      public_id: {
-        type: String,
+    ],
+    video: [
+      {
+        url: {
+          type: String,
+        },
+        public_id: {
+          type: String,
+        },
       },
-    },
-    mode: {
+    ],
+
+    description: {
       type: String,
-      //   enum: ["Online", "Offline", "Hybrid", "InHome", "e-Clinic"],
     },
+    reviews: ReviewSchema,
+    socialLink: socialLinkSchema,
     isAvailable: {
       type: Boolean,
       default: true,
@@ -108,22 +149,13 @@ const diagnosticServiceSchema = new Schema<IDiagnosticServices>(
       type: Boolean,
       default: false,
     },
-    duration: {
-      type: String,
-    },
-    description: {
-      type: String,
-      required: [true, "Please enter a something about servics"],
-    },
-    reviews: ReviewSchema,
-    socialLink: socialLinkSchema,
     location: {
       type: {
         type: String,
         enum: ["Point"],
         default: "Point",
       },
-      coordinates: { type: [Number], required: true },
+      coordinates: { type: [Number] },
       city: String,
       state: String,
       pincode: String,
@@ -132,17 +164,17 @@ const diagnosticServiceSchema = new Schema<IDiagnosticServices>(
     },
     serviceType: {
       type: String,
-      default: "diagnosis",
+      default: "wellness",
     },
   },
   { timestamps: true }
 );
 
-diagnosticServiceSchema.index({ location: "2dsphere" }); // For geospatial queries
-export const DiagnosticService = mongoose.model<IDiagnosticServices>(
-  "DiagnosticService",
-  diagnosticServiceSchema
-);
+resortServiceSchema.index({ location: "2dsphere" });
 
+export const WellnessTourService = mongoose.model<IResortServices>(
+  "WellnessTourService",
+  resortServiceSchema
+);
 
 

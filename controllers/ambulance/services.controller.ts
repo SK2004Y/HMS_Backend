@@ -11,6 +11,7 @@ export const createAmbulanceVehicleService = CatchAsyncError(
     try {
       console.log("API hit: createAmbulanceVehicleService");
       console.log("Request Body:", req.body);
+      const userId = req.user._id; // Get user ID from authenticated user
 
       // 🔐 Required field check
       const {
@@ -58,6 +59,7 @@ export const createAmbulanceVehicleService = CatchAsyncError(
 
       // 🛠 Create and save vehicle
       const vehicle = new AmbulanceVehicle({
+        userId,
         type,
         subType,
         registrationNumber,

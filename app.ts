@@ -67,7 +67,6 @@ app.use(
     // origin:process.env.ORIGIN
     //fronted part running port url
     origin: [
-      
       "https://www.uronhealth.in",
       "exp://192.168.208.191:8081",
       "https://www.provideruron.com",
@@ -76,6 +75,8 @@ app.use(
       "http://192.168.25.191:3000",
       "http://192.168.199.191:3000",
       "http://192.168.31.253:3000",
+
+      "https://admin-uronhealth-git-main-rahulkumaryas-projects.vercel.app/",
     ],
 
     credentials: true,

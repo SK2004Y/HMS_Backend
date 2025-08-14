@@ -33,76 +33,7 @@ import { sendSMS } from "../utils/smsgateway/sendSMS";
 
 
 
-//test
-// export const registrationUser = CatchAsyncError(
-//   async (req: Request, res: Response, next: NextFunction) => {
-//     try {
-//       const { phone, email, password, role } = req.body;
 
-
-
-//       console.log(`registration api hit `, req.body);
-//       // Check if email already exists
-//       const isEmailExist = await userModel.findOne({ email });
-//       if (isEmailExist) {
-//         return next(new ErrorHandler("Email already exists", 400));
-//       }
-
-//       // User data
-//       const user: IRegistrationBody = {
-//         phone,
-//         email,
-//         password,
-//         role,
-//       };
-
-//       // Create activation token
-//       const activationToken = createActivationToken(user);
-//       const activationCode = activationToken.activationCode;
-
-//       // Prepare email data
-//       const data = { user: { name: "" }, activationCode };
-
-      
-
-//       // Render email template
-//       const html = await ejs.renderFile(
-//         path.join(__dirname, "../mails/activation-mail.ejs"),
-//         data
-//       );
-
-//       try {
-//         // Send the activation email
-//         const emailResponse = await sendMail({
-//           email: user.email,
-//           subject: "Activate your account",
-//           template: "activation-mail.ejs",
-//           text: "Hello", // Optional text version of the email
-//           data,
-//         });
-
-//         console.log("Email send response:", emailResponse);
-
-//         // Response after successful email sending
-//         res.status(201).json({
-//           success: true,
-//           message: `Please check your email: ${user.email} to activate your account!`,
-//           activationToken: activationToken.token,
-//         });
-//       } catch (emailError: any) {
-//         console.error("Error sending email:", emailError);
-//         return next(new ErrorHandler("Failed to send activation email", 500));
-//       }
-
-   
-
-//       //creating a model which is used by the role
-//     } catch (error: any) {
-//       console.error("Error during registration:", error);
-//       return next(new ErrorHandler(error.message, 400));
-//     }
-//   }
-// );
 
 // controllers/userController.ts or wherever your controller is
 
@@ -143,18 +74,11 @@ export const registrationUser = CatchAsyncError(
         return next(new ErrorHandler("Failed to send activation email", 500));
       }
 
+      // Prepare SMS text
+      const smsText = `Dear customer, your OTP for login is ${activationCode}. Please do not share this OTP with anyone. It is valid for 10 minutes. Regards YBLT Services Pvt Ltd`;
 
-      
-      // 4. Send Activation SMS
-      // try {
-      //   const smsText = `Your OTP to activate your account is ${activationCode}. Do not share it.`;
-      //  const responsesms= await sendSMS(phone, smsText);
-      //  console.log(`response ${responsesms}and phone ${phone} and ${activationCode}`,responsesms)
-      //  next();
-      // } catch (err) {
-      //   console.error("SMS Error:", err);
-        
-      // }
+      // ✅ Call sendSMS safely
+      const smsResult = await sendSMS(phone, smsText);
 
       // 5. Success Response
       res.status(201).json({

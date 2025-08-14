@@ -3,6 +3,8 @@ import { CatchAsyncError } from "../../middleware/catchAsyncErrors";
 import { streamUploadMultipleToCloudinary } from "../../utils/cloudinary";
 import { ResortService } from "../../modals/resort.modal/services.modal";
 import ErrorHandler from "../../utils/ErrorHandler";
+import { TourService } from "../../modals/tour.modal/service.modal";
+import { WellnessTourService } from "../../modals/wellness/service.modal";
 
 // Create Resort Service Controller
 export const createResortService = CatchAsyncError(
@@ -90,11 +92,11 @@ export const createResortService = CatchAsyncError(
   }
 );
 
-//tour operator services
+//tour operator services || Wellness services
 
-// Create Resort Service Controller
 
-export const createTourService = CatchAsyncError(
+
+export const createWellnessTourService = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       console.log("Received TourOperator service data:", req.body);
@@ -138,13 +140,13 @@ export const createTourService = CatchAsyncError(
         // location,       // if applicable
       };
 
-      const tour = new TourService(parsedBody);
+      const tour = new WellnessTourService(parsedBody);
       await tour.save();
 
       return res.status(201).json({
         success: true,
         tour,
-        message: "Tour service created successfully",
+        message: "service created successfully",
       });
     } catch (error: any) {
       return next(new ErrorHandler(error.message, 400));

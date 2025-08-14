@@ -25,9 +25,10 @@ import { handleProfile } from "../../utils/handler/handler.controller";
 import { createHospitalProfile } from '../../controllers/Hospital/profile.controller';
 import { createRadiologyProfile } from '../../controllers/radiology/profile.controller';
 import { createRadiologyService } from '../../controllers/radiology/services.controller';
-import { createClinicService } from '../../controllers/clinic/service.controller';
+import { createClinicService, createE_ClinicService } from '../../controllers/clinic/service.controller';
 import { createProfessionalService } from '../../controllers/professional/professional.controller';
 import { createHospitalService } from '../../controllers/Hospital/services.controller';
+import { createPharmacyService } from '../../controllers/pharmacy/service.controller';
 
 
 //all profileform handler 
@@ -74,7 +75,21 @@ ClinicRoute.post(
   createClinicService
 );
 
+//create E_Clinic service
+ClinicRoute.post(
+  "/create-service/E_Clinic",
+  updateAccessToken,
+  isAuthneticated,
+  authorizeRoles("e_clinic"),
+  checkIsVerified,
+  upload.any(), // handles multiple image uploads under 'files' field
+  createE_ClinicService
+);
 
+
+
+
+//create professional service
 ClinicRoute.post(
   "/create-service-professional",
   updateAccessToken,
@@ -93,6 +108,24 @@ ClinicRoute.post(
   upload.any(), // handles multiple image uploads under 'files' field
  createHospitalService
 );
+
+
+
+//create pharmacy service
+
+ClinicRoute.post(
+  "/pharmacy/create-service",
+  updateAccessToken,
+  isAuthneticated,
+  checkIsVerified,
+  upload.any(), // handles multiple image uploads under 'files' field
+  createPharmacyService
+);
+
+
+
+
+
 
 
 

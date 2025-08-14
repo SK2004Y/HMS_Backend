@@ -1,7 +1,7 @@
 import express, { Response, Request, NextFunction } from 'express'
 
 
-import { isAuthneticated, authorizeRoles } from '../../middleware/auth';
+import { isAuthneticated, authorizeRoles, checkIsVerified } from '../../middleware/auth';
 
 const AmbulanceRoute = express.Router();
 
@@ -58,7 +58,7 @@ AmbulanceRoute.post("/verify",verifyOtp);
 
 
 
-AmbulanceRoute.post("/create-service",createAmbulanceVehicleService);
+AmbulanceRoute.post("/create-service",updateAccessToken,isAuthneticated,authorizeRoles("ambulance"),checkIsVerified,createAmbulanceVehicleService);
 
 
 

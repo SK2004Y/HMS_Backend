@@ -3,8 +3,11 @@ import { DoctorService } from "../../modals/doctor.modal/services.modal";
 import { DiagnosticService } from "../../modals/diagnosis.modal/services.modal";
 import { GymService } from "../../modals/gym.modal.ts/services.modal";
 import { RadiologyService } from "../../modals/radiology.modal.ts/services.modal";
+import { E_ClinicService } from "../../modals/e_clinic/service.modal";
+import { PharmacyServices } from "../../modals/pharmacy/service.modal";
 import { HospitalService } from "../../modals/hospital.modal/services.modal";
 import { ResortService } from "../../modals/resort.modal/services.modal";
+import { WellnessTourService } from "../../modals/wellness/service.modal";
 import {  AmbulanceVehicle } from "../../modals/ambulance.modal/services.modal";
 import { PharmacyService } from "../../modals/medicine.modal/services.modal";
 import { ClinicService } from "../../modals/clinic.modal/service.modal";
@@ -160,9 +163,13 @@ export const getAllServices = async (req: Request, res: Response) => {
       radiologies,
       resorts,
       clinic,
+      e_clinic,
+      wellness,
       pathology,
       professional,
       hospital,
+      gym,
+      pharmacy,
     ] = await Promise.all([
       DoctorService.aggregate(buildPipeline(useGeo)).then((docs) =>
         docs.map((doc) => ({ ...doc, serviceType: "doctor" }))
@@ -171,7 +178,7 @@ export const getAllServices = async (req: Request, res: Response) => {
         docs.map((doc) => ({ ...doc, serviceType: "ambulance" }))
       ),
       DiagnosticService.aggregate(buildPipeline(useGeo)).then((docs) =>
-        docs.map((doc) => ({ ...doc, serviceType: "diagnostic" }))
+        docs.map((doc) => ({ ...doc, serviceType: "diagnosis" }))
       ),
       RadiologyService.aggregate(buildPipeline(useGeo)).then((docs) =>
         docs.map((doc) => ({ ...doc, serviceType: "radiology" }))
@@ -182,6 +189,19 @@ export const getAllServices = async (req: Request, res: Response) => {
       ClinicService.aggregate(buildPipeline(useGeo)).then((docs) =>
         docs.map((doc) => ({ ...doc, serviceType: "clinic" }))
       ),
+      E_ClinicService.aggregate(buildPipeline(useGeo)).then((docs) =>
+        docs.map((doc) => ({ ...doc, serviceType: "e_clinic" }))
+      ),
+      WellnessTourService.aggregate(buildPipeline(useGeo)).then((docs) =>
+        docs.map((doc) => ({ ...doc, serviceType: "wellness" }))
+      ),
+GymService.aggregate(buildPipeline(useGeo)).then((docs) =>
+        docs.map((doc) => ({ ...doc, serviceType: "gym" }))
+      ),
+      PharmacyServices.aggregate(buildPipeline(useGeo)).then((docs) =>
+        docs.map((doc) => ({ ...doc, serviceType: "pharmacy" }))
+      ),
+
       PathologyService.aggregate(buildPipeline(useGeo)).then((docs) =>
         docs.map((doc) => ({ ...doc, serviceType: "pathology" }))
       ),
@@ -203,8 +223,12 @@ export const getAllServices = async (req: Request, res: Response) => {
       ...ambulances,
       ...diagnostics,
       ...radiologies,
+      ...wellness,
       ...resorts,
       ...clinic,
+      ...e_clinic,
+      ...gym,
+      ...pharmacy,
       ...pathology,
       ...professional,
       ...hospital,
@@ -878,11 +902,26 @@ export const getServiceByTypeAndId = async (
       case "radiology":
         service = await RadiologyService.findById(id);
         break;
+      case "diagnosis":
+        service = await DiagnosticService.findById(id);
+        break;
       case "resort":
         service = await ResortService.findById(id);
         break;
+      case "wellness":
+        service = await WellnessTourService.findById(id);
+        break;
+      case "e_clinic":
+        service = await E_ClinicService.findById(id);
+        break;
       case "clinic":
         service = await ClinicService.findById(id);
+        break;
+      case "gym":
+        service = await GymService.findById(id);
+        break;
+      case "pharmacy":  
+        service = await PharmacyService.findById(id);
         break;
       case "hospital":
         service = await HospitalService.findById(id);
@@ -894,7 +933,7 @@ export const getServiceByTypeAndId = async (
         service = await PathologyService.findById(id);
         break;
       case "ambulance":
-        service = await AmbulanceService.findById(id);
+        service = await AmbulanceVehicle.findById(id);
         break;
       default:
         return next(new ErrorHandler("Invalid service type", 400));

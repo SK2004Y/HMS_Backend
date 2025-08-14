@@ -1,6 +1,6 @@
 import express, { Response, Request, NextFunction } from 'express'
 import { GymProfile } from '../../modals/gym.modal.ts/profile.modal';
-import { createGymProfile } from '../../controllers/gym/gym.controller';
+import { createGymProfile, createGymService } from '../../controllers/gym/gym.controller';
 import { isAuthneticated, authorizeRoles } from '../../middleware/auth';
 
 const GymRoute = express.Router();
@@ -35,6 +35,22 @@ GymRoute.post(
   // 👈 middleware to parse stringified JSON
   createGymProfile
 );
+
+
+GymRoute.post(
+  "/create-service",
+  updateAccessToken,
+  isAuthneticated,
+  authorizeRoles("gym"),
+  upload.single("avatar"),
+  // 👈 middleware to parse stringified JSON
+  createGymService
+);
+
+
+
+
+
 
 
 export default GymRoute;

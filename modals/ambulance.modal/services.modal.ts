@@ -6,6 +6,7 @@ import mongoose, { Document, Schema } from "mongoose";
 
 
 export interface IAmbulanceVehicle {
+  userId: mongoose.Types.ObjectId;
   type: "ambulance" | "non-ambulance";
   subType: string;
   registrationNumber: string;
@@ -17,6 +18,7 @@ export interface IAmbulanceVehicle {
   mobile: string;
   otpVerified: boolean;
   createdAt?: Date;
+  serviceType?:string;
   updatedAt?: Date;
 }
 
@@ -30,6 +32,12 @@ export interface IAmbulanceVehicle {
 
 const ambulanceVehicleSchema = new Schema<IAmbulanceVehicle>(
   {
+
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      ref: "User",
+    },
     type: {
       type: String,
       enum: ["ambulance", "non-ambulance"],
@@ -71,6 +79,10 @@ const ambulanceVehicleSchema = new Schema<IAmbulanceVehicle>(
     otpVerified: {
       type: Boolean,
       default: false,
+    },
+    serviceType: {
+      type: String,
+      default: "ambulance",
     },
   },
   { timestamps: true }

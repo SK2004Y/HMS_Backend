@@ -5,13 +5,16 @@ import { RadiologyService } from "../../modals/radiology.modal.ts/services.modal
 import { PathologyService } from "../../modals/pathology.modal/services.modal";
 import { HospitalService } from "../../modals/hospital.modal/services.modal";
 import { ClinicService } from "../../modals/clinic.modal/service.modal";
-import { TourDetail } from "../../modals/tour.modal/service.modal";
+import { TourDetail, TourService } from "../../modals/tour.modal/service.modal";
 import { ResortService } from "../../modals/resort.modal/services.modal";
 
 import { redis } from "../../utils/redis";
 import mongoose from "mongoose";
 import { ProfessionalService } from "../../modals/professional.modal/service.modal";
 import { AmbulanceVehicle } from "../../modals/ambulance.modal/services.modal";
+import { E_ClinicService } from "../../modals/e_clinic/service.modal";
+import { PharmacyServices } from "../../modals/pharmacy/service.modal";
+import { DiagnosticService } from "../../modals/diagnosis.modal/services.modal";
 
 
 
@@ -26,7 +29,12 @@ const SERVICE_MODELS: Record<string, any> = {
   professional:ProfessionalService,
   resort:ResortService,
   ambulance:AmbulanceVehicle,
+  wellness:TourService,
+  e_clinic:E_ClinicService,
+  pharmacy:PharmacyServices,
+  diagnosis:DiagnosticService,
 };
+
 
 
 
@@ -264,6 +272,9 @@ export const viewSingleServiceTypeandId = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { serviceType, serviceId } = req.params;
+      console.log(
+        `Fetching service ${serviceType} with ID ${serviceId} from DB`
+      );
 
       // ✅ Validate ObjectId
       if (!mongoose.Types.ObjectId.isValid(serviceId)) {
@@ -345,47 +356,112 @@ export const viewSingleServiceTypeandId = CatchAsyncError(
   //toogle all services
 
 
-  export const toggleServiceField = CatchAsyncError(
-    async (req: Request, res: Response, next: NextFunction) => {
-      const { serviceType, serviceId, field } = req.params;
+  // export const toggleServiceField = CatchAsyncError(
+  //   async (req: Request, res: Response, next: NextFunction) => {
+  //     const { serviceType, serviceId, field } = req.params;
 
-      if (!mongoose.Types.ObjectId.isValid(serviceId)) {
-        return next(new ErrorHandler("Invalid service ID", 400));
-      }
+  //     if (!mongoose.Types.ObjectId.isValid(serviceId)) {
+  //       return next(new ErrorHandler("Invalid service ID", 400));
+  //     }
 
-      const Model = SERVICE_MODELS[serviceType.toLowerCase()];
-      if (!Model) {
-        return next(new ErrorHandler("Invalid service type", 400));
-      }
+  //     const Model = SERVICE_MODELS[serviceType.toLowerCase()];
+  //     if (!Model) {
+  //       return next(new ErrorHandler("Invalid service type", 400));
+  //     }
 
-      const allowedFields = ["isAvailable", "lead"];
-      if (!allowedFields.includes(field)) {
-        return next(new ErrorHandler("Invalid toggle field", 400));
-      }
+  //     const allowedFields = ["isAvailable", "lead"];
+  //     if (!allowedFields.includes(field)) {
+  //       return next(new ErrorHandler("Invalid toggle field", 400));
+  //     }
 
-      const service = await Model.findById(serviceId);
-      if (!service) {
-        return next(new ErrorHandler("Service not found", 404));
-      }
+  //     const service = await Model.findById(serviceId);
+  //     if (!service) {
+  //       return next(new ErrorHandler("Service not found", 404));
+  //     }
 
-      // ✅ Toggle the field value
-      service[field] = !service[field];
-      await service.save({ validateBeforeSave: false });
+  //     // ✅ Toggle the field value
+  //     service[field] = !service[field];
+  //     await service.save({ validateBeforeSave: false });
 
-      // ✅ Delete Redis cache (view cache specifically)
-      const cacheKey = `view:${serviceType}:${serviceId}`;
-      await redis.del(cacheKey);
+  //     // ✅ Delete Redis cache (view cache specifically)
+  //     const cacheKey = `view:${serviceType}:${serviceId}`;
+  //     await redis.del(cacheKey);
 
-      return res.status(200).json({
-        success: true,
-        message: `${field} toggled for ${serviceType} (${service._id})`,
-        serviceId: service._id,
-        [field]: service[field],
-      });
-    }
-  );
+  //     return res.status(200).json({
+  //       success: true,
+  //       message: `${field} toggled for ${serviceType} (${service._id})`,
+  //       serviceId: service._id,
+  //       [field]: service[field],
+  //     });
+  //   }
+  // );
   
 
+//2nd 
+
+export const toggleServiceField = CatchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { serviceType, serviceId, field } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(serviceId)) {
+      return next(new ErrorHandler("Invalid service ID", 400));
+    }
+
+    const Model = SERVICE_MODELS[serviceType.toLowerCase()];
+    if (!Model) {
+      return next(new ErrorHandler("Invalid service type", 400));
+    }
+
+    const allowedFields = ["isAvailable", "lead"];
+    if (!allowedFields.includes(field)) {
+      return next(new ErrorHandler("Invalid toggle field", 400));
+    }
+
+    const service = await Model.findById(serviceId);
+    if (!service) {
+      return next(new ErrorHandler("Service not found", 404));
+    }
+
+    // 🛠 Fix for resort invalid GeoJSON
+    if (serviceType.toLowerCase() === "resort" && service.location) {
+      const coords = service.location.coordinates;
+      if (
+        !Array.isArray(coords) ||
+        coords.length !== 2 ||
+        isNaN(coords[0]) ||
+        isNaN(coords[1])
+      ) {
+        // Option 1: Remove location
+        // service.location = undefined;
+
+        // Option 2 (safer): Set a valid default location
+        service.location = {
+          type: "Point",
+          coordinates: [0, 0],
+          city: service.location.city || "",
+          state: service.location.state || "",
+          pincode: service.location.pincode || "",
+          landmark: service.location.landmark || "",
+        };
+      }
+    }
+
+    // ✅ Toggle the field value
+    service[field] = !service[field];
+    await service.save({ validateBeforeSave: false });
+
+    // ✅ Delete Redis cache
+    const cacheKey = `view:${serviceType}:${serviceId}`;
+    await redis.del(cacheKey);
+
+    return res.status(200).json({
+      success: true,
+      message: `${field} toggled for ${serviceType} (${service._id})`,
+      serviceId: service._id,
+      [field]: service[field],
+    });
+  }
+);
 
 
 
