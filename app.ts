@@ -76,7 +76,7 @@ app.use(
       "http://192.168.199.191:3000",
       "http://192.168.31.253:3000",
 
-      "https://admin-uronhealth-git-main-rahulkumaryas-projects.vercel.app/",
+      "https://admin-uronhealth.vercel.app/",
     ],
 
     credentials: true,
