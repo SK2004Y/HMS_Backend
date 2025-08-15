@@ -222,7 +222,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Activate Your Account</title>
+    <title>Login Your Account</title>
     <style>
         body {
             font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
@@ -299,21 +299,24 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>Welcome to DHMS</h1>
+            <h1>Welcome to Uronhealth</h1>
         </div>
         <div class="content">
             <p>Dear <strong>
                     <%= user.name %>
                 </strong>,</p>
 
-            <p>Thank you for registering with <strong>Dentist Hospital Management System</strong>.</p>
+            <p>Thank you for registering with <strong>Uronhealth</strong>.</p>
             <p>Please use the activation code below to complete your account setup:</p>
 
             <div class="activation-code">
-                <%= activationCode %>
+                Dear customer, your OTP for login is
+                <%= activationCode %>Please do not share this OTP with anyone. It is valid for 10 minutes.
+                Regards YBLT Services Pvt Ltd
+
             </div>
 
-            <p>Or you can click the button below to activate your account instantly:</p>
+            <!-- <p>Or you can click the button below to activate your account instantly:</p> -->
 
           
 
