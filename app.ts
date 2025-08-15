@@ -69,7 +69,10 @@ app.use(
     origin: [
       "https://www.uronhealth.in",
       "exp://192.168.208.191:8081",
+      "https://www.provideruron.com/",
       "https://www.provideruron.com",
+      "http://localhost:3000",
+      "http://localhost:3001",
    
 
       "https://admin-uronhealth.vercel.app",
