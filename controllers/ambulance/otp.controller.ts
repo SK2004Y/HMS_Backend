@@ -3,7 +3,7 @@ import { Request, Response, NextFunction } from "express";
 import { OTP } from "../../modals/ambulance.modal/otp.modal";
 import { CatchAsyncError } from "../../middleware/catchAsyncErrors";
 import ErrorHandler from "../../utils/ErrorHandler";
-
+import smsText from "../../utils/smsgateway";
 const generateOtp = () =>
   Math.floor(100000 + Math.random() * 900000).toString();
 
@@ -26,6 +26,7 @@ export const sendOtp = CatchAsyncError(
 
     // ⚠️ You can replace this with actual SMS API call
     console.log(`OTP for ${mobile}: ${otp}`);
+      const smsText = `Dear customer, your OTP for login is ${otp}. Please do not share this OTP with anyone. It is valid for 10 minutes. Regards YBLT Services Pvt Ltd`;
 
     res.status(200).json({
       success: true,
