@@ -119,41 +119,54 @@ import { Types } from "mongoose"; // for ObjectId
 export const getUserWithProfile = async (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
-    console.log('userId:', userId);
+    console.log("userId:", userId);
 
-    // Step 1: Find the user
+    // Step 1: Find the user (with timestamps included)
     const user = await userModel.findById(userId).lean();
     if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found' });
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
     }
-    console.log('User found:', user.role);
-
-    
+    console.log("User found:", user.role);
 
     // Step 2: Map role to profile model
     const ProfileModel = profileModelMap[user.role.toLowerCase()];
-    console.log('ProfileModel:', ProfileModel);
+    console.log("ProfileModel:", ProfileModel);
 
     let profile = null;
     if (ProfileModel) {
       // Convert userId to ObjectId for correct querying
-      const objectUserId = Types.ObjectId.isValid(userId) ? new Types.ObjectId(userId) : userId;
+      const objectUserId = Types.ObjectId.isValid(userId)
+        ? new Types.ObjectId(userId)
+        : userId;
       profile = await ProfileModel.findOne({ userId: objectUserId }).lean();
     }
 
-    console.log('Profile found:', profile);
+    console.log("Profile found:", profile);
 
-    // Step 3: Respond with combined data
+    // Step 3: Respond with combined data including createdAt & updatedAt
     res.status(200).json({
       success: true,
-      user,
-      profile: profile || {},
+      user: {
+        ...user,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+      },
+      profile: profile
+        ? {
+            ...profile,
+            createdAt: profile.createdAt,
+            updatedAt: profile.updatedAt,
+          }
+        : {},
     });
   } catch (error: any) {
-    console.error('Error in getUserWithProfile:', error);
+    console.error("Error in getUserWithProfile:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
 
 
 
